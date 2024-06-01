@@ -27,11 +27,10 @@ export class CommunitiesService {
           as: 'communities',
         },
       },
-      // {
-      //   $project: { community: '$communities' },
-      // },
+      {
+        $project: { community: { $arrayElemAt: ['$communities', 0] }, points: 1 },
+      },
     ]);
-    // return this.userModel.aggregate([
     //   { $match: { userId } },
     //   {
     //     $lookup: {

@@ -6,7 +6,7 @@ import { TmaService } from 'src/tma/tma.service';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
-@Controller('community')
+@Controller('communities')
 export class CommunitiesController {
   private readonly logger = new Logger(CommunitiesController.name);
 
@@ -16,7 +16,7 @@ export class CommunitiesController {
     @InjectModel(Community.name) private readonly communityModel: Model<Community>,
   ) {}
 
-  @Get()
+  @Get('user')
   getUserCommunities(@Headers('tmaInitData') tmaInitData: string): Promise<Array<Community>> {
     this.logger.log('tmaInitData', tmaInitData);
 
@@ -31,6 +31,8 @@ export class CommunitiesController {
     if (!webAppInitData.user) {
       throw new UnauthorizedException();
     }
+
+    this.logger.log('webAppInitData', webAppInitData);
 
     return this.communitiesService.getUserCommunities(webAppInitData.user?.id);
   }

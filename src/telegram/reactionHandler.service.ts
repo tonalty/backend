@@ -1,17 +1,18 @@
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Document } from 'mongoose';
 import { Message } from 'src/data/message.entity';
 import { Logger } from 'mongodb';
 import { MessageReactionUpdated } from 'telegraf/typings/core/types/typegram';
 import { inspect } from 'util';
-
 export class ReactionHandlerService {
   private readonly logger = new Logger(ReactionHandlerService.name);
   private readonly thresholdForPoints: number;
+  private readonly pointsReward: number;
 
   constructor(private configService: ConfigService, @InjectModel(Message.name) private messageModel: Model<Message>) {
     this.thresholdForPoints = Number(this.configService.getOrThrow('THRESHOLD_FOR_POINTS'));
+    this.pointsReward = Number(this.configService.getOrThrow('POINTS_REWARD'));
   }
 
   async handle(messageReaction: MessageReactionUpdated) {
@@ -54,23 +55,20 @@ export class ReactionHandlerService {
 
     this.logger.info(`Message in DB: ${inspect(message)}`);
 
-    await this.calculatePoints(message);
+    await this.makeReward(message);
   }
 
-  async calculatePoints(message: Message) {
-    if (message.totalReactionsForMsg >= this.thresholdForPoints) {
-      const POINTS_REWARD = 5;
-
-      const points = (message.totalReactionsForMsg / this.thresholdForPoints) * POINTS_REWARD;
-
+  async makeReward(message: Document & Message) {
+    if (message.points === 0 && message.totalReactionsForMsg >= this.thresholdForPoints) {
       try {
         // userModel
         await this.messageModel.updateOne(
-          { creatorUserId: message.creatorUserId },
           {
-            $set: { points },
+            _id: message._id,
           },
-          { upsert: true },
+          {
+            $set: { points: this.pointsReward },
+          },
         );
       } catch (error) {
         this.logger.error('Error while saving user after threshold', error);
