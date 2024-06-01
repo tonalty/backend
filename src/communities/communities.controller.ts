@@ -17,10 +17,10 @@ export class CommunitiesController {
     @InjectModel(Community.name) private readonly communityModel: Model<Community>,
   ) {}
 
-  @Get('user')
-  getUserCommunities(@Headers('tmaInitData') tmaInitData: string): Promise<Array<UserCommunity>> {
+  getUserId(tmaInitData: string) {
     this.logger.log('tmaInitData', tmaInitData);
 
+    // eslint-disable-next-line prefer-const
     let webAppInitData: WebAppInitData = { auth_date: 0, hash: '', user: { id: 307294448, first_name: 'dummy' } };
     // try {
     //   webAppInitData = this.tmaService.parseWebAppInitData(tmaInitData);
@@ -35,7 +35,17 @@ export class CommunitiesController {
 
     this.logger.log('webAppInitData', webAppInitData);
 
-    return this.communitiesService.getUserCommunities(webAppInitData.user?.id);
+    return webAppInitData.user.id;
+  }
+
+  @Get('user')
+  getUserCommunities(@Headers('tmaInitData') tmaInitData: string): Promise<Array<UserCommunity>> {
+    return this.communitiesService.getUserCommunities(this.getUserId(tmaInitData));
+  }
+
+  @Get('admin')
+  getAdminCommunities(@Headers('tmaInitData') tmaInitData: string): Promise<Array<Community>> {
+    return this.communitiesService.getAdminCommunities(this.getUserId(tmaInitData));
   }
 
   @Get(':id')

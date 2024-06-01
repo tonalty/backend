@@ -35,37 +35,9 @@ export class CommunitiesService {
         $sort: { points: -1, _id: 1 },
       },
     ]);
-    //   { $match: { userId } },
-    //   {
-    //     $lookup: {
-    //       localField: 'userId',
-    //       from: this.messageModel.collection.name,
-    //       foreignField: 'creatorUserId',
-    //       as: 'messages',
-    //     },
-    //   },
-    //   {
-    //     $unwind: { path: '$messages' },
-    //   },
-    //   {
-    //     $lookup: {
-    //       localField: 'messages.chatId',
-    //       from: this.communityModel.collection.name,
-    //       foreignField: 'chatId',
-    //       as: 'communities',
-    //     },
-    //   },
-    //   {
-    //     $project: { community: '$communities' },
-    //   },
-    // ]);
   }
 
-  // async createCommunity(communityDto: CommunityDto): Promise<Community> {
-  //   try {
-  //     return await this.communityRepository.insertOne(communityDto);
-  //   } catch (error) {
-  //     this.logger.error(error);
-  //   }
-  // }
+  getAdminCommunities(userId: number): Promise<Community[]> {
+    return this.messageModel.find({ adminUserIds: userId });
+  }
 }

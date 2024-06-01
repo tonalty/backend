@@ -11,9 +11,7 @@ export class MessageHandlerService {
 
   constructor(
     @InjectModel(Message.name) private msgModel: Model<Message>,
-
-    @InjectModel(Community.name)
-    private communityModel: Model<Community>,
+    @InjectModel(Community.name) private communityModel: Model<Community>,
   ) {}
 
   async handle(update: NarrowedContext<Context<Update>, Update.MessageUpdate>) {
@@ -31,16 +29,20 @@ export class MessageHandlerService {
 
     this.logger.info('Message in DB:', JSON.stringify(message));
 
+    const admins = await update.getChatAdministrators();
+
     await this.communityModel.updateOne(
       { chatId: update.chat.id },
       {
         $setOnInsert: {
           chatId: update.chat.id,
-          title: update.chat.title,
           // logic when we calculate jetons here
           remainingPoints: 0,
           threshold: -1,
         },
+
+        title: update.chat.title,
+        adminUserIds: admins.map((x) => x.user.id),
 
         // deduplicate
         // $push: {

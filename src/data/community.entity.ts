@@ -10,7 +10,7 @@ export class Community {
   title: string;
 
   @Prop()
-  userIds: string[];
+  adminUserIds: string[];
 
   @Prop()
   threshold: number;
