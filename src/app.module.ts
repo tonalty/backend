@@ -4,7 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { configValidationSchema } from './config.schema';
 import { TelegramModule } from './telegram/telegram.module';
-import { CommunityModule } from './communities/community.module';
+import { CommunityModule } from './communities/communities.module';
 import { DataModule } from './data/data.module';
 import { TmaModule } from './tma/tma.module';
 
