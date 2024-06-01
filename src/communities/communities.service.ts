@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from 'src/data/user.entity';
 import { Message } from 'src/data/message.entity';
+import { UserCommunity } from './interfaces/UserCommunity';
 
 @Injectable()
 export class CommunitiesService {
@@ -15,7 +16,7 @@ export class CommunitiesService {
     @InjectModel(Message.name) private readonly messageModel: Model<Message>,
   ) {}
 
-  getUserCommunities(userId: number): Promise<Array<Community>> {
+  getUserCommunities(userId: number): Promise<Array<UserCommunity>> {
     return this.messageModel.aggregate([
       { $match: { creatorUserId: userId } },
       { $group: { _id: '$chatId', points: { $sum: '$points' } } },
@@ -29,6 +30,9 @@ export class CommunitiesService {
       },
       {
         $project: { community: { $arrayElemAt: ['$communities', 0] }, points: 1 },
+      },
+      {
+        $sort: { points: -1, _id: 1 },
       },
     ]);
     //   { $match: { userId } },
