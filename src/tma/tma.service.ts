@@ -1,0 +1,63 @@
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import * as crypto from 'crypto';
+import { first } from 'rxjs';
+
+@Injectable()
+export class TmaService {
+  constructor(configService: ConfigService) {
+    /*
+    secret_key = HMAC_SHA256(<bot_token>, "WebAppData")
+    */
+    this.secretKey = crypto.createHmac('sha256', 'WebAppData').update(configService.getOrThrow('BOT_TOKEN')).digest();
+    this.authDateTimeout = 1000 * Number(configService.getOrThrow('AUTH_DATE_SEC_TIMEOUT'));
+  }
+
+  private readonly secretKey: Buffer;
+  private readonly authDateTimeout: number;
+
+  public parseWebAppInitData(tmaInitData: string): WebAppInitData {
+    const urlSearchParams = new URLSearchParams(tmaInitData);
+    const hash = urlSearchParams.get('hash');
+    if (!hash) {
+      throw new Error('webAppInitData has not hash param');
+    }
+    urlSearchParams.delete('hash');
+
+    const entries = [...urlSearchParams.entries()];
+    entries.sort((a, b) => a[0].localeCompare(b[0], undefined, { sensitivity: 'base' }));
+    const entriesString = entries.map((e) => e[0] + '=' + e[1]).join('\n');
+
+    /*
+    if (hex(HMAC_SHA256(data_check_string, secret_key)) == hash) {
+    // data is from Telegram
+    }
+    */
+
+    const calculatedHash = crypto.createHmac('sha256', this.secretKey).update(entriesString).digest('hex');
+    if (hash !== calculatedHash) {
+      throw new Error('webAppInitData hash param was failed to verify');
+    }
+
+    const auth_date = 1000 * Number(urlSearchParams.get('auth_date'));
+    if (!auth_date) {
+      throw new Error('webAppInitData auth_date param is wrong');
+    }
+    if (auth_date > Date.now()) {
+      throw new Error('webAppInitData auth_date param is in future');
+    }
+    if (auth_date + this.authDateTimeout < Date.now()) {
+      throw new Error('webAppInitData auth_date param is too old');
+    }
+    urlSearchParams.delete('auth_date');
+
+    const webAppInitData: WebAppInitData & Record<string, unknown> = { auth_date, hash };
+    for (const [key, value] of urlSearchParams.entries()) {
+      const firstChar = value.substring(0, 1);
+      const lastChar = value.substring(value.length - 1);
+      webAppInitData[key] =
+        (firstChar === '{' && lastChar == '}') || (firstChar === '[' && lastChar === ']') ? JSON.parse(value) : value;
+    }
+    return webAppInitData;
+  }
+}
