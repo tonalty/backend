@@ -7,4 +7,5 @@ export const configValidationSchema = Joi.object({
   BOT_TOKEN: Joi.string().required(),
   THRESHOLD_FOR_POINTS: Joi.number().default(1).required(),
   AUTH_DATE_SEC_TIMEOUT: Joi.number().default(1800).required(),
+  MNEMONIC: Joi.string().required(),
 });

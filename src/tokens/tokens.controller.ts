@@ -1,4 +1,4 @@
-import { Body, Controller, Headers, Logger, Post } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Logger, Param, Post } from '@nestjs/common';
 import { TmaService } from 'src/tma/tma.service';
 import { MintTokensDto } from './dto/MintTokensDto';
 import { TokensService } from './tokens.service';
@@ -10,19 +10,19 @@ export class TokensController {
 
   constructor(private readonly tmaService: TmaService, private readonly tokensService: TokensService) {}
 
+  @Get('metadata/:chatId')
+  getMetadata(@Param('chatId') chatId: number): Promise<any> {
+    return this.tokensService.getMetadata(chatId);
+  }
+
   @Post('mintTokens')
   mintTokens(@Headers('tmaInitData') tmaInitData: string, @Body() mintTokensDto: MintTokensDto): Promise<any> {
     this.tmaService.getUserId(tmaInitData);
-    //return this.tokensService.mintTokens(mintTokensDto);
-    return Promise.resolve();
+    return this.tokensService.mintTokens(mintTokensDto);
   }
 
   @Post('claimTokens')
   claimTokens(@Headers('tmaInitData') tmaInitData: string, @Body() claimTokensDto: ClaimTokensDto): Promise<any> {
-    this.logger.log('tmaInitData', tmaInitData);
-    this.logger.log('claimTokensDto', claimTokensDto);
-
-    //return this.tokensService.claimTokens(this.tmaService.getUserId(tmaInitData), claimTokensDto);
-    return Promise.resolve();
+    return this.tokensService.claimTokens(this.tmaService.getUserId(tmaInitData), claimTokensDto);
   }
 }

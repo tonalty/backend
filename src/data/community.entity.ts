@@ -1,5 +1,5 @@
 import { Prop, Schema } from '@nestjs/mongoose';
-import { Jetton } from './jetton.entity';
+import { TokenMetadata } from './tokenMetadata.entity';
 
 @Schema()
 export class Community {
@@ -22,5 +22,5 @@ export class Community {
   walletAddress: string;
 
   @Prop()
-  jetton: Jetton;
+  tokenMetadata: TokenMetadata;
 }
