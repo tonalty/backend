@@ -1,4 +1,4 @@
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger, NestApplicationOptions, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as fs from 'fs';
@@ -7,13 +7,17 @@ import { ConfigService } from '@nestjs/config';
 async function bootstrap() {
   const logger = new Logger();
 
-  const app = await NestFactory.create(AppModule, {
-    httpsOptions: {
+  const options: NestApplicationOptions = {
+    cors: true,
+  };
+  if (process.env.STAGE === 'dev') {
+    options.httpsOptions = {
       key: fs.readFileSync('../localhost.direct.key'),
       cert: fs.readFileSync('../localhost.direct.crt'),
-    },
-    cors: true,
-  });
+    };
+  }
+
+  const app = await NestFactory.create(AppModule, options);
 
   app.useGlobalPipes(
     new ValidationPipe({
