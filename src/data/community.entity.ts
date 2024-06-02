@@ -23,4 +23,7 @@ export class Community {
 
   @Prop()
   tokenMetadata: TokenMetadata;
+
+  @Prop()
+  tokenAddress?: string;
 }

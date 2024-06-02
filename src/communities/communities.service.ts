@@ -37,6 +37,18 @@ export class CommunitiesService {
     ]);
   }
 
+  async getUserPoints(userId: number, chatId: number): Promise<number> {
+    const result: { points: number }[] = await this.messageModel.aggregate([
+      { $match: { creatorUserId: userId, chatId } },
+      { $group: { _id: null, points: { $sum: '$points' } } },
+      {
+        $project: { points: 1 },
+      },
+    ]);
+
+    return result[0].points;
+  }
+
   getAdminCommunities(userId: number): Promise<Community[]> {
     // return this.communityModel.aggregate([{ $match: { adminUserIds: userId } }]);
     return this.communityModel.find({ adminUserIds: userId });
