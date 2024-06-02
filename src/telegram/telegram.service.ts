@@ -35,31 +35,6 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     });
 
     this.bot.on('message', async (update) => {
-      //       if (update.text === '/start') {
-      //         await update.sendPhoto(
-      //           // 'https://i0.wp.com/pictures.pibig.info/uploads/posts/2023-04/1680594642_pictures-pibig-info-p-utka-risunok-vkontakte-2.png?ssl=1',
-      //           'https://cdn11.bigcommerce.com/s-g5m7dxaevg/images/stencil/1280x1280/products/307/1549/56__64108.1666686998.jpg?c=1',
-      //         );
-
-      //         await update.sendMessage(
-      //           `Here is you reward: 20% discount.
-      // Promo-code: HTSF-AKIR-QNCD`,
-      //           // web_app: { url: 'https://tonalty.localhost.direct:5173/connectcommunity/-4270868384' },
-      //           {
-      //             reply_markup: {
-      //               inline_keyboard: [
-      //                 [
-      //                   {
-      //                     text: 'Open reward shop',
-      //                     url: 'https://tonalty.localhost.direct:5173/connectcommunity/-4270868384',
-      //                   },
-      //                 ],
-      //               ],
-      //             },
-      //           },
-      //         );
-      //       }
-
       try {
         await this.messageHandlerService.handle(update);
       } catch (error) {
