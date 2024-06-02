@@ -77,7 +77,7 @@ export class TokensService implements OnModuleInit {
     }
     if (community.tokenAddress) {
       // ToDo: support more minting
-      return;
+      //return;
     }
 
     const seqno = await this.openedWallet.getSeqno();
@@ -155,7 +155,7 @@ export class TokensService implements OnModuleInit {
     if (isJettonWalletDeployed) {
       await openedJettonWallet.sendTransfer(
         this.walletSender,
-        toNano(0.1),
+        toNano(0.2),
         toNano(points),
         toAddress,
         this.openedWallet.address,
