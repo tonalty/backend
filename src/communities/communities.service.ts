@@ -38,6 +38,7 @@ export class CommunitiesService {
   }
 
   getAdminCommunities(userId: number): Promise<Community[]> {
-    return this.messageModel.find({ adminUserIds: userId });
+    // return this.communityModel.aggregate([{ $match: { adminUserIds: userId } }]);
+    return this.communityModel.find({ adminUserIds: userId });
   }
 }

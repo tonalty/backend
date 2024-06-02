@@ -6,4 +6,4 @@ import { TokensService } from './tokens.service';
   controllers: [TokensController],
   providers: [TokensService],
 })
-export class CommunityModule {}
+export class TokensModule {}
