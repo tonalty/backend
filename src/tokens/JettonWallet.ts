@@ -31,11 +31,11 @@ export class JettonWallet implements Contract {
     return new JettonWallet(contractAddress(workchain, init), init);
   }
 
-  async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
+  async sendDeploy(provider: ContractProvider, via: Sender, value: bigint, body?: Cell) {
     await provider.internal(via, {
       value,
       sendMode: SendMode.PAY_GAS_SEPARATELY,
-      body: beginCell().endCell(),
+      body,
     });
   }
 
@@ -75,9 +75,9 @@ export class JettonWallet implements Contract {
     jetton_amount: bigint,
     to: Address,
     responseAddress: Address,
-    customPayload: Cell,
+    customPayload: Cell | null,
     forward_ton_amount: bigint,
-    forwardPayload: Cell,
+    forwardPayload: Cell | null,
   ) {
     await provider.internal(via, {
       sendMode: SendMode.PAY_GAS_SEPARATELY,

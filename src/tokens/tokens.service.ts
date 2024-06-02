@@ -150,5 +150,27 @@ export class TokensService implements OnModuleInit {
     const openedJettonWallet = this.tonClient.open(JettonWallet.createFromAddress(walletAddress));
 
     const isJettonWalletDeployed = await this.tonClient.isContractDeployed(openedJettonWallet.address);
+
+    const toAddress = Address.parse(claimTokensDto.toAddress);
+    if (isJettonWalletDeployed) {
+      await openedJettonWallet.sendTransfer(
+        this.walletSender,
+        toNano(0.1),
+        toNano(points),
+        toAddress,
+        this.openedWallet.address,
+        null,
+        toNano(0.1),
+        null,
+      );
+    } else {
+      openedJettonWallet.sendDeploy(
+        this.walletSender,
+        toNano(0.25),
+        JettonWallet.transferMessage(toNano(points), toAddress, this.openedWallet.address, null, toNano(0.1), null),
+      );
+    }
+
+    await TokensService.waitForTransaction(this.openedWallet, seqno);
   }
 }
