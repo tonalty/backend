@@ -8,6 +8,7 @@ import { CommunityModule } from './communities/communities.module';
 import { DataModule } from './data/data.module';
 import { TmaModule } from './tma/tma.module';
 import { TokensModule } from './tokens/tokens.module';
+import { ReferralsModule } from './referrals/referrals.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { TokensModule } from './tokens/tokens.module';
     CommunityModule,
     DataModule,
     TokensModule,
+    ReferralsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

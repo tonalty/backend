@@ -22,8 +22,8 @@ export class CommunitiesService {
       { $group: { _id: '$chatId', points: { $sum: '$points' } } },
       {
         $lookup: {
-          localField: '_id',
           from: this.communityModel.collection.name,
+          localField: '_id',
           foreignField: 'chatId',
           as: 'communities',
         },

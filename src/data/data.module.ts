@@ -4,6 +4,7 @@ import { MongooseModule, SchemaFactory } from '@nestjs/mongoose';
 import { Community } from './community.entity';
 import { Message } from './message.entity';
 import { User } from './user.entity';
+import { Referral } from './referral.entity';
 
 @Global()
 @Module({
@@ -28,6 +29,10 @@ import { User } from './user.entity';
         {
           name: User.name,
           schema: SchemaFactory.createForClass(User),
+        },
+        {
+          name: Referral.name,
+          schema: SchemaFactory.createForClass(Referral),
         },
       ]),
     },
