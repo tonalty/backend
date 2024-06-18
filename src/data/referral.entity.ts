@@ -15,5 +15,8 @@ export class Referral {
   link: string;
 
   @Prop()
+  inviteLink: string;
+
+  @Prop()
   isActivated: boolean;
 }

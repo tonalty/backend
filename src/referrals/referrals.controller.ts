@@ -7,12 +7,29 @@ export class ReferralsController {
   constructor(private readonly tmaService: TmaService, private readonly referralsService: ReferralsService) {}
 
   @Post()
-  generateReferral(@Headers('tmaInitData') tmaInitData: string, @Body() body: { chatId: number }): Promise<string> {
-    return this.referralsService.generateReferral(this.tmaService.getUserId(tmaInitData), body.chatId);
+  generateReferral(
+    @Headers('tmaInitData') tmaInitData: string,
+    @Body() body: { chatId: number; title: string },
+  ): Promise<string> {
+    const userInfo = this.getUserInfo(tmaInitData);
+
+    const name = String(userInfo.username || userInfo.first_name || userInfo.last_name || userInfo.id);
+
+    return this.referralsService.generateReferral(userInfo.id, body.chatId, body.title, name);
   }
 
-  @Post('tgWebAppStartParam')
-  tgWebAppStartParam(@Body() payload: TgWebAppStartParam) {
-    return this.referralsService.tgWebAppStartParam(payload);
+  // @Post('tgWebAppStartParam')
+  // tgWebAppStartParam(@Body() payload: TgWebAppStartParam) {
+  //   return this.referralsService.tgWebAppStartParam(payload);
+  // }
+
+  @Get('currentUser')
+  getUserInfo(@Headers('tmaInitData') tmaInitData: string) {
+    return this.tmaService.getUserInfo(tmaInitData);
+  }
+
+  @Get('startParam')
+  getStartParam(@Headers('startParam') startParam: string) {
+    return this.referralsService.decodeStartParam(startParam);
   }
 }

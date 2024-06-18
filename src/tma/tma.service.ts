@@ -67,4 +67,22 @@ export class TmaService {
 
     return webAppInitData.user.id;
   }
+
+  // duplication
+  getUserInfo(tmaInitData: string): WebAppUser {
+    // const webAppInitData = this.parseWebAppInitData(tmaInitData);
+
+    // const webAppInitData: WebAppInitData = {
+    //   auth_date: 0,
+    //   hash: '',
+    //   user: { id: 147388258, first_name: 'super' },
+    // };
+    const webAppInitData = this.parseWebAppInitData(tmaInitData);
+
+    if (!webAppInitData.user) {
+      throw new UnauthorizedException('webAppInitData has no user');
+    }
+
+    return webAppInitData.user;
+  }
 }
