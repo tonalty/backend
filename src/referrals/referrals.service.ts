@@ -47,7 +47,7 @@ export class ReferralsService {
           `https://api.telegram.org/bot${this.botToken}/createChatInviteLink`,
           {
             chat_id: chatId,
-            creates_join_request: true,
+            creates_join_request: false,
             name: `${_id}`,
           },
         );
