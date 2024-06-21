@@ -41,7 +41,7 @@ export class ChatMemberHandlerService {
       }
 
       if (result.ownerId === update.chatMember.new_chat_member.user.id) {
-        this.logger.warn('Owner id of the link is the same as user id, so points would not be assigned');
+        throw new Error('Owner id of the link is the same as user id, so points would not be assigned');
       }
 
       let referralUpdate;
