@@ -5,11 +5,8 @@ export class Referral {
   @Prop()
   chatId: number;
 
-  @Prop()
+  @Prop({ required: true })
   ownerId: number;
-
-  @Prop()
-  visitorId?: number;
 
   @Prop()
   link: string;
@@ -17,6 +14,6 @@ export class Referral {
   @Prop()
   inviteLink: string;
 
-  @Prop()
-  isActivated: boolean;
+  @Prop({ default: [] })
+  visitorIds: number[];
 }

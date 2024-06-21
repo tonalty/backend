@@ -6,6 +6,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MessageHandlerService } from './messageHandler.service';
 import { ReactionHandlerService } from './reactionHandler.service';
+import { ChatMemberHandlerService } from './chatMemberHandler.service';
 
 @Injectable()
 export class TelegramService implements OnModuleInit, OnModuleDestroy {
@@ -16,6 +17,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     configService: ConfigService,
     private readonly messageHandlerService: MessageHandlerService,
     private readonly reactionHandlerService: ReactionHandlerService,
+    private readonly chatMemberHandlerService: ChatMemberHandlerService,
     @InjectModel(Message.name) private readonly messageModel: Model<Message>,
   ) {
     this.botToken = configService.getOrThrow('BOT_TOKEN');
@@ -42,10 +44,18 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       }
     });
 
+    this.bot.on('chat_member', async (update) => {
+      try {
+        await this.chatMemberHandlerService.handle(update);
+      } catch (error) {
+        this.logger.error('Error while adding new chat member joinned the group. ', error);
+      }
+    });
+
     this.bot.catch((err) => this.logger.error(err));
 
     this.bot.launch({
-      allowedUpdates: ['message', 'message_reaction', 'message_reaction_count', 'message'],
+      allowedUpdates: ['message', 'message_reaction', 'message_reaction_count', 'message', 'chat_member'],
     });
   }
 

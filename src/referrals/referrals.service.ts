@@ -25,64 +25,68 @@ export class ReferralsService {
     private readonly httpService: HttpService,
 
     @InjectModel(Referral.name) private readonly referralModel: Model<Referral>,
-    @InjectModel(Community.name) private readonly communityModel: Model<Community>,
   ) {
     this.botToken = this.configService.getOrThrow('BOT_TOKEN');
   }
 
   async generateReferral(userId: number, chatId: number, title: string, name: string): Promise<string> {
-    let inviteLinkResponse;
+    const referral = await this.referralModel.findOne({
+      chatId: chatId,
+      ownerId: userId,
+    });
 
-    try {
-      inviteLinkResponse = await this.httpService.axiosRef.post(
-        `https://api.telegram.org/bot${this.botToken}/exportChatInviteLink`,
-        {
-          chat_id: chatId,
+    if (referral === null) {
+      let inviteLinkResponse;
+
+      const _id = new mongoose.Types.ObjectId().toString();
+
+      this.logger.log('_id generated', _id);
+
+      try {
+        inviteLinkResponse = await this.httpService.axiosRef.post(
+          `https://api.telegram.org/bot${this.botToken}/createChatInviteLink`,
+          {
+            chat_id: chatId,
+            creates_join_request: true,
+            name: `${_id}`,
+          },
+        );
+      } catch (error) {
+        this.logger.error('Error while retrieving telegram invite link', error);
+      }
+
+      if (!inviteLinkResponse) {
+        throw new Error('Could not recieve telegram invite link');
+      }
+
+      const {
+        data: {
+          result: { invite_link: telegramInviteLink },
         },
-      );
-    } catch (error) {
-      this.logger.error('Error while retrieving telegram invite link', error);
-    }
+      } = inviteLinkResponse;
 
-    if (!inviteLinkResponse) {
-      throw new Error('Could not recieve telegram invite link');
-    }
+      const payload = Buffer.from(JSON.stringify({ ownerId: userId, title, name, telegramInviteLink }))
+        .toString('base64')
+        .replace(/=+$/, '');
 
-    const {
-      data: { result: telegramInviteLink },
-    } = inviteLinkResponse;
+      const link = `https://t.me/tonalty_local_bot/testapp?startapp=${encodeURIComponent(payload)}`;
 
-    const _id = new mongoose.Types.ObjectId();
-
-    const payload = Buffer.from(JSON.stringify({ _id, ownerId: userId, title, name, telegramInviteLink }))
-      .toString('base64')
-      .replace(/=+$/, '');
-
-    const link = `https://t.me/tonalty_local_bot/testapp?startapp=${encodeURIComponent(payload)}`;
-
-    try {
-      await this.referralModel.findOneAndUpdate(
-        {
+      try {
+        await this.referralModel.create({
+          _id,
           chatId: chatId,
           ownerId: userId,
-        },
-        {
-          $setOnInsert: {
-            _id,
-            chatId: chatId,
-            ownerId: userId,
-            link,
-            isActivated: false,
-            inviteLink: telegramInviteLink,
-          },
-        },
-        { upsert: true },
-      );
-    } catch (error) {
-      throw new Error(`Failed to update referral ${error}`);
+          link,
+          inviteLink: telegramInviteLink,
+        });
+
+        return Promise.resolve(link);
+      } catch (error) {
+        throw new Error(`Failed to update referral ${error}`);
+      }
     }
 
-    return Promise.resolve(link);
+    return Promise.resolve(referral.link);
   }
 
   decodeStartParam(startParam: string) {

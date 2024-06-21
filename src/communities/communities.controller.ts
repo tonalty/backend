@@ -12,11 +12,15 @@ export class CommunitiesController {
 
   @Get('user')
   getUserCommunities(@Headers('tmaInitData') tmaInitData: string): Promise<Array<UserCommunity>> {
+    this.logger.log('getUserCommunities', JSON.stringify(tmaInitData));
+
     return this.communitiesService.getUserCommunities(this.tmaService.getUserId(tmaInitData));
   }
 
   @Get('admin')
   getAdminCommunities(@Headers('tmaInitData') tmaInitData: string): Promise<Array<Community>> {
+    this.logger.log('getAdminCommunities', JSON.stringify(tmaInitData));
+
     return this.communitiesService.getAdminCommunities(this.tmaService.getUserId(tmaInitData));
   }
 

@@ -1,10 +1,10 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Message } from 'src/data/message.entity';
-import { Logger } from 'mongodb';
 import { Context, NarrowedContext } from 'telegraf';
 import { Update } from 'telegraf/typings/core/types/typegram';
 import { Community } from 'src/data/community.entity';
+import { Logger } from '@nestjs/common';
 
 export class MessageHandlerService {
   private readonly logger = new Logger(MessageHandlerService.name);
@@ -51,7 +51,7 @@ Start using our mini-app to be able to earn points and get rewards.`,
       creatorFirstName: update.message.from.first_name,
     });
 
-    this.logger.info('Message in DB:', JSON.stringify(message));
+    this.logger.log('Message in DB:', JSON.stringify(message));
 
     const admins = await update.getChatAdministrators();
 
