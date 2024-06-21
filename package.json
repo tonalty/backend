@@ -33,6 +33,7 @@
     "@nestjs/core": "^8.0.0",
     "@nestjs/mongoose": "^10.0.6",
     "@nestjs/platform-express": "^8.0.0",
+    "@nestjs/swagger": "^7.3.1",
     "@orbs-network/ton-access": "^2.3.3",
     "@ton/core": "^0.56.3",
     "@ton/crypto": "^3.2.0",

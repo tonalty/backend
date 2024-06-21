@@ -1,5 +1,6 @@
 import { Logger, NestApplicationOptions, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import * as fs from 'fs';
 import { ConfigService } from '@nestjs/config';
@@ -27,8 +28,12 @@ async function bootstrap() {
       forbidUnknownValues: true,
     }),
   );
-  const port = Number(app.get(ConfigService).getOrThrow('PORT'));
 
+  const config = new DocumentBuilder().setTitle('Tonalty API').setVersion('1.0').build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
+
+  const port = Number(app.get(ConfigService).getOrThrow('PORT'));
   await app.listen(port);
 
   logger.log(`Application listening on port ${port}`);
