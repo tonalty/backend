@@ -46,7 +46,17 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
 
     this.bot.on('chat_member', async (update) => {
       try {
+        this.logger.log('-------------chat_member----', JSON.stringify(update));
         await this.chatMemberHandlerService.handle(update);
+      } catch (error) {
+        this.logger.error('Error while adding new chat member joinned the group. ', error);
+      }
+    });
+
+    this.bot.on('my_chat_member', async (update) => {
+      try {
+        this.logger.log('-------------my_chat_member----', JSON.stringify(update));
+        // await this.chatMemberHandlerService.handle(update);
       } catch (error) {
         this.logger.error('Error while adding new chat member joinned the group. ', error);
       }
@@ -55,7 +65,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     this.bot.catch((err) => this.logger.error(err));
 
     this.bot.launch({
-      allowedUpdates: ['message', 'message_reaction', 'message_reaction_count', 'message', 'chat_member'],
+      allowedUpdates: ['message', 'message_reaction', 'message_reaction_count', 'message', 'chat_member', 'my_chat_member'],
     });
   }
 
