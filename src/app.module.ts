@@ -9,6 +9,7 @@ import { DataModule } from './data/data.module';
 import { TmaModule } from './tma/tma.module';
 import { TokensModule } from './tokens/tokens.module';
 import { ReferralsModule } from './referrals/referrals.module';
+import { HistoryModule } from './history/history.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ReferralsModule } from './referrals/referrals.module';
     DataModule,
     TokensModule,
     ReferralsModule,
+    HistoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

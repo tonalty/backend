@@ -1,9 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Community } from '../data/community.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Message } from 'src/data/message.entity';
 import { CommunityUser } from 'src/data/communityUser.entity';
+import { Message } from 'src/data/message.entity';
 
 @Injectable()
 export class CommunitiesService {
@@ -19,7 +18,7 @@ export class CommunitiesService {
   }
 
   getAdminCommunities(userId: number): Promise<CommunityUser[]> {
-    return this.communityUserModel.find({ isAdmin: true }, {}, { $sort: { points: -1, _id: 1 } });
+    return this.communityUserModel.find({ userId: userId, isAdmin: true }, {}, { $sort: { points: -1, _id: 1 } });
   }
 
   async getUserPoints(userId: number, chatId: number): Promise<number> {
