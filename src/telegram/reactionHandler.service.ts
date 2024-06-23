@@ -5,12 +5,17 @@ import { Message } from 'src/data/message.entity';
 import { Logger } from 'mongodb';
 import { MessageReactionUpdated } from 'telegraf/typings/core/types/typegram';
 import { inspect } from 'util';
+import { CommunityUser } from 'src/data/communityUser.entity';
 export class ReactionHandlerService {
   private readonly logger = new Logger(ReactionHandlerService.name);
   private readonly thresholdForPoints: number;
   private readonly pointsReward: number;
 
-  constructor(private configService: ConfigService, @InjectModel(Message.name) private messageModel: Model<Message>) {
+  constructor(
+    private configService: ConfigService,
+    @InjectModel(Message.name) private messageModel: Model<Message>,
+    @InjectModel(CommunityUser.name) private communityUserModel: Model<CommunityUser>,
+  ) {
     this.thresholdForPoints = Number(this.configService.getOrThrow('THRESHOLD_FOR_POINTS'));
     this.pointsReward = Number(this.configService.getOrThrow('POINTS_REWARD'));
   }
@@ -61,7 +66,6 @@ export class ReactionHandlerService {
   async makeReward(message: Document & Message) {
     if (message.points === 0 && message.totalReactionsForMsg >= this.thresholdForPoints) {
       try {
-        // userModel
         await this.messageModel.updateOne(
           {
             _id: message._id,
@@ -72,6 +76,15 @@ export class ReactionHandlerService {
         );
       } catch (error) {
         this.logger.error('Error while saving user after threshold', error);
+      }
+
+      try {
+        await this.communityUserModel.findOneAndUpdate(
+          { chatId: message.chatId, userId: message.creatorUserId },
+          { $inc: { points: this.pointsReward } },
+        );
+      } catch (error) {
+        this.logger.error('Error while updating community user table', error);
       }
 
       // need to substruct remaining points for community here

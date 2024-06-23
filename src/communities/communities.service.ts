@@ -2,39 +2,24 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Community } from '../data/community.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User } from 'src/data/user.entity';
 import { Message } from 'src/data/message.entity';
-import { UserCommunity } from './interfaces/UserCommunity';
+import { CommunityUser } from 'src/data/communityUser.entity';
 
 @Injectable()
 export class CommunitiesService {
   private readonly logger = new Logger(CommunitiesService.name);
 
   constructor(
-    @InjectModel(Community.name) private readonly communityModel: Model<Community>,
-    @InjectModel(User.name) private readonly userModel: Model<User>,
     @InjectModel(Message.name) private readonly messageModel: Model<Message>,
+    @InjectModel(CommunityUser.name) private readonly communityUserModel: Model<CommunityUser>,
   ) {}
 
-  getUserCommunities(userId: number): Promise<Array<UserCommunity>> {
-    return this.messageModel.aggregate([
-      { $match: { creatorUserId: userId } },
-      { $group: { _id: '$chatId', points: { $sum: '$points' } } },
-      {
-        $lookup: {
-          from: this.communityModel.collection.name,
-          localField: '_id',
-          foreignField: 'chatId',
-          as: 'communities',
-        },
-      },
-      {
-        $project: { community: { $arrayElemAt: ['$communities', 0] }, points: 1 },
-      },
-      {
-        $sort: { points: -1, _id: 1 },
-      },
-    ]);
+  getUserCommunities(userId: number): Promise<Array<CommunityUser>> {
+    return this.communityUserModel.find({ userId: userId }, {}, { $sort: { points: -1, _id: 1 } });
+  }
+
+  getAdminCommunities(userId: number): Promise<CommunityUser[]> {
+    return this.communityUserModel.find({ isAdmin: true }, {}, { $sort: { points: -1, _id: 1 } });
   }
 
   async getUserPoints(userId: number, chatId: number): Promise<number> {
@@ -47,10 +32,5 @@ export class CommunitiesService {
     ]);
 
     return result[0].points;
-  }
-
-  getAdminCommunities(userId: number): Promise<Community[]> {
-    // return this.communityModel.aggregate([{ $match: { adminUserIds: userId } }]);
-    return this.communityModel.find({ adminUserIds: userId });
   }
 }

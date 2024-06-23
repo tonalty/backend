@@ -5,6 +5,7 @@ import { Community } from './community.entity';
 import { Message } from './message.entity';
 import { User } from './user.entity';
 import { Referral } from './referral.entity';
+import { CommunityUser, CommunityUserSchema } from './communityUser.entity';
 
 @Global()
 @Module({
@@ -21,6 +22,10 @@ import { Referral } from './referral.entity';
         {
           name: Community.name,
           schema: SchemaFactory.createForClass(Community),
+        },
+        {
+          name: CommunityUser.name,
+          schema: CommunityUserSchema,
         },
         {
           name: Message.name,
