@@ -14,7 +14,7 @@ export class CommunityUserHistory {
 }
 
 export const CommunityUserHistorySchema = SchemaFactory.createForClass(CommunityUserHistory);
-CommunityUserHistorySchema.index({ userId: 1, communityId: 1, createdAt: -1 });
+CommunityUserHistorySchema.index({ userId: 1, createdAt: -1 });
 
 interface HistoryDataType {
   type: string;
