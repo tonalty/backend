@@ -6,54 +6,59 @@ import { CommunityUser } from 'src/data/communityUser.entity';
 import { Context, NarrowedContext } from 'telegraf';
 import { Chat, Update } from 'telegraf/typings/core/types/typegram';
 import { Community } from 'src/data/community.entity';
+import { AbstractChatMemberHandler } from './abstractChatMemberHandler.service';
+import { DeleteResult } from 'mongodb';
 
-export class ChatMemberHandlerService {
+@Injectable()
+export class ChatMemberHandlerService extends AbstractChatMemberHandler {
   private readonly logger = new Logger(ChatMemberHandlerService.name);
 
   constructor(
     @InjectModel(Referral.name) private referralModel: Model<Referral>,
-    @InjectModel(CommunityUser.name) private communityUserModel: Model<CommunityUser>,
-    @InjectModel(Community.name) private communityModel: Model<Community>
-  ) {}
+    @InjectModel(CommunityUser.name) protected communityUserModel: Model<CommunityUser>,
+    @InjectModel(Community.name) protected communityModel: Model<Community>,
+  ) {
+    super(communityModel, communityUserModel);
+  }
+
+  private async deleteCommunityUser(chatId: number, userId: number): Promise<DeleteResult> {
+    return await this.communityUserModel.deleteOne({ chatId, userId });
+  }
 
   async handle(update: NarrowedContext<Context<Update>, Update.ChatMemberUpdate>) {
-    this.logger.log('invite link: ', JSON.stringify(update.chatMember.invite_link));
-    this.logger.log('new chat member', JSON.stringify(update.chatMember.new_chat_member));
-
     // react when it is new user or user that previously created group joined
-    const validStatuses = ['member', 'creator'];
+    const validStatuses = ['member', 'creator', 'left'];
 
     if (!validStatuses.includes(update.chatMember.new_chat_member.status)) {
       throw new Error('Invalid status');
     }
+
+    if (update.chatMember.new_chat_member.status === 'left') {
+      return await this.deleteCommunityUser(update.chatMember.chat.id, update.chatMember.new_chat_member.user.id);
+    }
+
     const inviteLink = update.chatMember.invite_link?.invite_link;
     const chatId = update.chatMember.chat.id;
+
     this.logger.log('inviteLink', inviteLink);
+
     if (!inviteLink) {
       const admins = await update.getChatAdministrators();
       const chatInfo = await update.getChat();
+      const title = (chatInfo as Chat.GroupGetChat).title;
 
-      await this.communityModel.updateOne(
-        { chatId: update.chat.id },
-        {
-          $setOnInsert: {
-            chatId: update.chat.id,
-            title: (chatInfo as Chat.GroupGetChat).title ?? `private-${chatInfo.id}`,
-            // logic when we calculate jetons here
-            remainingPoints: 0,
-            threshold: -1,
-          }
-        },
-        { upsert: true }, // create a new document if no documents match the filter
-      );
-      
-      await this.communityUserModel.create({
-        userId: update.from.id,
-        communityId: update.chat.id,
-        communityName: (chatInfo as Chat.GroupGetChat).title ?? `private-${chatInfo.id}`,
-        points: 0,
-        isAdmin: admins.some(owner => owner.user.id === update.from.id)
-      });
+      try {
+        await this.saveCommunity(chatId, title);
+      } catch (error) {
+        this.logger.error(error);
+      }
+
+      try {
+        await this.saveUserCommunity(chatId, update.chatMember.new_chat_member.user.id, title, admins);
+      } catch (error) {
+        this.logger.error(error);
+      }
+
       return;
     }
 
@@ -98,10 +103,11 @@ export class ChatMemberHandlerService {
     try {
       // right now only add points to owner of the link
       await this.communityUserModel.findOneAndUpdate(
-        { userId: result.ownerId, communityId: chatId },
+        { userId: result.ownerId, chatId: chatId },
         { $inc: { points: 50 } },
-        { upsert: true });
-      // TODO: Add chat history update 
+        { upsert: true },
+      );
+      // TODO: Add chat history update
     } catch (error) {
       throw new Error(`Error while increasing points ${error}`);
     }

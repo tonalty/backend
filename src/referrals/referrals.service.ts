@@ -3,7 +3,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import { Community } from 'src/data/community.entity';
 import { Referral } from 'src/data/referral.entity';
 import { TmaService } from 'src/tma/tma.service';
 
@@ -52,7 +51,7 @@ export class ReferralsService {
           },
         );
       } catch (error) {
-        this.logger.error('Error while retrieving telegram invite link', error);
+        this.logger.error('Error while retrieving telegram invite link check that bot has admin rights!!!', error);
       }
 
       if (!inviteLinkResponse) {

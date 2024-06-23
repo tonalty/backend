@@ -6,7 +6,7 @@ export class CommunityUser {
   userId: number;
 
   @Prop()
-  communityId: number;
+  chatId: number;
 
   @Prop()
   communityName: string;
@@ -19,4 +19,4 @@ export class CommunityUser {
 }
 
 export const CommunityUserSchema = SchemaFactory.createForClass(CommunityUser);
-CommunityUserSchema.index({ userId: 1, communityId: 1 });
+CommunityUserSchema.index({ userId: 1, chatId: 1 });
