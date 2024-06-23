@@ -1,11 +1,13 @@
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Document } from 'mongoose';
+import { Model, Document, Types } from 'mongoose';
 import { Message } from 'src/data/message.entity';
 import { Logger } from 'mongodb';
 import { MessageReactionUpdated } from 'telegraf/typings/core/types/typegram';
 import { inspect } from 'util';
 import { CommunityUser } from 'src/data/communityUser.entity';
+import { MessageReactionData, CommunityUserHistory } from 'src/data/communityUserHistory.entity';
+
 export class ReactionHandlerService {
   private readonly logger = new Logger(ReactionHandlerService.name);
   private readonly thresholdForPoints: number;
@@ -15,6 +17,7 @@ export class ReactionHandlerService {
     private configService: ConfigService,
     @InjectModel(Message.name) private messageModel: Model<Message>,
     @InjectModel(CommunityUser.name) private communityUserModel: Model<CommunityUser>,
+    @InjectModel(CommunityUserHistory.name) private communityUserHistoryModel: Model<CommunityUserHistory>,
   ) {
     this.thresholdForPoints = Number(this.configService.getOrThrow('THRESHOLD_FOR_POINTS'));
     this.pointsReward = Number(this.configService.getOrThrow('POINTS_REWARD'));
@@ -63,31 +66,44 @@ export class ReactionHandlerService {
     await this.makeReward(message);
   }
 
-  async makeReward(message: Document & Message) {
-    if (message.points === 0 && message.totalReactionsForMsg >= this.thresholdForPoints) {
-      try {
-        await this.messageModel.updateOne(
-          {
-            _id: message._id,
-          },
-          {
-            $set: { points: this.pointsReward },
-          },
-        );
-      } catch (error) {
-        this.logger.error('Error while saving user after threshold', error);
-      }
-
-      try {
-        await this.communityUserModel.findOneAndUpdate(
-          { chatId: message.chatId, userId: message.creatorUserId },
-          { $inc: { points: this.pointsReward } },
-        );
-      } catch (error) {
-        this.logger.error('Error while updating community user table', error);
-      }
-
-      // need to substruct remaining points for community here
+  async makeReward(message: Message & { _id: Types.ObjectId }) {
+    if (message.points !== 0 || message.totalReactionsForMsg < this.thresholdForPoints) {
+      return;
     }
+    try {
+      await this.messageModel.updateOne(
+        {
+          _id: message._id,
+        },
+        {
+          $set: { points: this.pointsReward },
+        },
+      );
+    } catch (error) {
+      this.logger.error('Error while saving user after threshold', error);
+    }
+
+    let communityUser;
+    try {
+      communityUser = await this.communityUserModel.findOneAndUpdate(
+        { chatId: message.chatId, userId: message.creatorUserId },
+        { $inc: { points: this.pointsReward } },
+      );
+    } catch (error) {
+      this.logger.error('Error while updating community user table', error);
+    }
+
+    if (communityUser) {
+      try {
+        await this.communityUserHistoryModel.create({
+          userId: communityUser.userId,
+          communityId: communityUser.chatId,
+          data: new MessageReactionData(message._id, message.chatId),
+        });
+      } catch (error) {
+        this.logger.error('Error while adding userHistory record', error);
+      }
+    }
+    // need to substruct remaining points for community here
   }
 }

@@ -6,6 +6,7 @@ import { Message } from './message.entity';
 import { User } from './user.entity';
 import { Referral } from './referral.entity';
 import { CommunityUser, CommunityUserSchema } from './communityUser.entity';
+import { CommunityUserHistory, CommunityUserHistorySchema } from './communityUserHistory.entity';
 
 @Global()
 @Module({
@@ -26,6 +27,10 @@ import { CommunityUser, CommunityUserSchema } from './communityUser.entity';
         {
           name: CommunityUser.name,
           schema: CommunityUserSchema,
+        },
+        {
+          name: CommunityUserHistory.name,
+          schema: CommunityUserHistorySchema,
         },
         {
           name: Message.name,

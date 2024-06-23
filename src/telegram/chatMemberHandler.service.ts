@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Referral } from 'src/data/referral.entity';
@@ -8,6 +8,7 @@ import { Chat, Update } from 'telegraf/typings/core/types/typegram';
 import { Community } from 'src/data/community.entity';
 import { AbstractChatMemberHandler } from './abstractChatMemberHandler.service';
 import { DeleteResult } from 'mongodb';
+import { CommunityUserHistory, ReferralJoinData } from 'src/data/communityUserHistory.entity';
 
 @Injectable()
 export class ChatMemberHandlerService extends AbstractChatMemberHandler {
@@ -17,6 +18,7 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
     @InjectModel(Referral.name) private referralModel: Model<Referral>,
     @InjectModel(CommunityUser.name) protected communityUserModel: Model<CommunityUser>,
     @InjectModel(Community.name) protected communityModel: Model<Community>,
+    @InjectModel(CommunityUserHistory.name) protected communityUserHistoryModel: Model<CommunityUserHistory>,
   ) {
     super(communityModel, communityUserModel);
   }
@@ -100,18 +102,30 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
       throw new Error(`This user with id ${update.chatMember.new_chat_member.user.id} had already recieved points`);
     }
 
+    let communityUser;
     try {
       // right now only add points to owner of the link
-      await this.communityUserModel.findOneAndUpdate(
+      communityUser = await this.communityUserModel.findOneAndUpdate(
         { userId: result.ownerId, chatId: chatId },
         { $inc: { points: 50 } },
         { upsert: true },
       );
-      // TODO: Add chat history update
     } catch (error) {
       throw new Error(`Error while increasing points ${error}`);
     }
 
+    if (communityUser) {
+      try {
+        // right now only add points to owner of the link
+        await this.communityUserHistoryModel.create({
+          userId: communityUser.userId,
+          communityId: communityUser.chatId,
+          data: new ReferralJoinData(result.ownerId, result.chatId),
+        });
+      } catch (error) {
+        throw new Error(`Error while adding user history record ${error}`);
+      }
+    }
     this.logger.log('Points were succesfully sent');
   }
 }
