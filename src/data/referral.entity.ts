@@ -9,6 +9,9 @@ export class Referral {
   ownerId: number;
 
   @Prop()
+  ownerName: string;
+
+  @Prop()
   link: string;
 
   @Prop()

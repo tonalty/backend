@@ -120,7 +120,7 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
         await this.communityUserHistoryModel.create({
           userId: communityUser.userId,
           communityId: communityUser.chatId,
-          data: new ReferralJoinData(result.ownerId, result.chatId),
+          data: new ReferralJoinData(result.ownerId, result.chatId, 50, result.ownerName),
         });
       } catch (error) {
         throw new Error(`Error while adding user history record ${error}`);

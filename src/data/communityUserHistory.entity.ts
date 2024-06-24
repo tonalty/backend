@@ -25,10 +25,19 @@ export type CommunityUserHistoryData = MessageReactionData | ReferralJoinData;
 export class MessageReactionData implements HistoryDataType {
   type = 'messageReaction';
 
-  constructor(public readonly messageId: Types.ObjectId, public readonly chatId: number) {}
+  constructor(
+    public readonly messageId: Types.ObjectId,
+    public readonly chatId: number,
+    public readonly points: number,
+  ) {}
 }
 
 export class ReferralJoinData implements HistoryDataType {
   type = 'refferalJoin';
-  constructor(public readonly userId: number, public readonly chatId: number) {}
+  constructor(
+    public readonly userId: number,
+    public readonly chatId: number,
+    public readonly points: number,
+    public readonly username: string,
+  ) {}
 }

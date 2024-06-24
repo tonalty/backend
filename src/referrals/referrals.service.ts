@@ -75,6 +75,7 @@ export class ReferralsService {
           _id,
           chatId: chatId,
           ownerId: userId,
+          ownerName: name,
           link,
           inviteLink: telegramInviteLink,
         });

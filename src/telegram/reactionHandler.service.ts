@@ -98,7 +98,7 @@ export class ReactionHandlerService {
         await this.communityUserHistoryModel.create({
           userId: communityUser.userId,
           communityId: communityUser.chatId,
-          data: new MessageReactionData(message._id, message.chatId),
+          data: new MessageReactionData(message._id, message.chatId, this.pointsReward),
         });
       } catch (error) {
         this.logger.error('Error while adding userHistory record', error);
