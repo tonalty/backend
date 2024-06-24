@@ -1,11 +1,20 @@
-import { TmaService } from 'src/tma/tma.service';
-import { ReferralsService, TgWebAppStartParam } from './referrals.service';
 import { Body, Controller, Get, Headers, Post } from '@nestjs/common';
+import { ApiBody } from '@nestjs/swagger';
+import { TmaService } from 'src/tma/tma.service';
+import { ReferralsService } from './referrals.service';
 
 @Controller('referrals')
 export class ReferralsController {
   constructor(private readonly tmaService: TmaService, private readonly referralsService: ReferralsService) {}
 
+  @ApiBody({
+    schema: {
+      properties: {
+        chatId: { type: 'number' },
+        title: { type: 'string' },
+      },
+    },
+  })
   @Post()
   generateReferral(
     @Headers('tmaInitData') tmaInitData: string,

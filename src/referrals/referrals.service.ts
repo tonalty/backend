@@ -4,7 +4,6 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Referral } from 'src/data/referral.entity';
-import { TmaService } from 'src/tma/tma.service';
 
 export interface TgWebAppStartParam {
   ['#tgWebAppData']: string;
@@ -17,18 +16,22 @@ export interface TgWebAppStartParam {
 export class ReferralsService {
   private readonly logger = new Logger(ReferralsService.name);
   private readonly botToken: string;
+  private readonly botName;
+  private readonly webAppName;
 
   constructor(
-    private readonly tmaService: TmaService,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
 
     @InjectModel(Referral.name) private readonly referralModel: Model<Referral>,
   ) {
     this.botToken = this.configService.getOrThrow('BOT_TOKEN');
+    this.botName = this.configService.getOrThrow('BOT_NAME');
+    this.webAppName = this.configService.getOrThrow('WEB_APP_NAME');
   }
 
   async generateReferral(userId: number, chatId: number, title: string, name: string): Promise<string> {
+    this.logger.log('Hello world');
     const referral = await this.referralModel.findOne({
       chatId: chatId,
       ownerId: userId,
@@ -68,7 +71,7 @@ export class ReferralsService {
         .toString('base64')
         .replace(/=+$/, '');
 
-      const link = `https://t.me/tonalty_local_bot/testapp?startapp=${encodeURIComponent(payload)}`;
+      const link = `https://t.me/${this.botName}/${this.webAppName}?startapp=${encodeURIComponent(payload)}`;
 
       try {
         await this.referralModel.create({

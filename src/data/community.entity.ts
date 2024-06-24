@@ -16,9 +16,6 @@ export class Community {
   threshold: number;
 
   @Prop()
-  remainingPoints: number;
-
-  @Prop()
   walletAddress: string;
 
   @Prop()
