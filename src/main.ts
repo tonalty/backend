@@ -29,6 +29,8 @@ async function bootstrap() {
     }),
   );
 
+  app.setGlobalPrefix('backend');
+
   const config = new DocumentBuilder().setTitle('Tonalty API').setVersion('1.0').build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
