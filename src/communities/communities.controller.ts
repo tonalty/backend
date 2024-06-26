@@ -28,7 +28,13 @@ export class CommunitiesController {
   getAllCommunities(@Headers('tmaInitData') tmaInitData: string) {
     this.logger.log('getAllCommunities', JSON.stringify(tmaInitData));
 
-    return this.communitiesService.getAllCommunities(this.tmaService.getUserId(tmaInitData));
+    try {
+      const id = this.tmaService.getUserId(tmaInitData);
+
+      return this.communitiesService.getAllCommunities(id);
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 
   @Get(':id')
@@ -37,6 +43,10 @@ export class CommunitiesController {
     @Param('id') id: number,
   ): Promise<CommunityUser | undefined> {
     const allCommunities = await this.getAllCommunities(tmaInitData);
+
+    if (!allCommunities) {
+      throw new Error('No communities');
+    }
 
     const userCommunity = allCommunities.find((userCommunity) => userCommunity.chatId === id);
 

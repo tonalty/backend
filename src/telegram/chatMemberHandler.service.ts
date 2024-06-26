@@ -43,11 +43,11 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
 
     this.logger.log('inviteLink', inviteLink);
 
-    if (!inviteLink) {
-      const admins = await update.getChatAdministrators();
-      const chatInfo = await update.getChat();
-      const title = (chatInfo as Chat.GroupGetChat).title;
+    const admins = await update.getChatAdministrators();
+    const chatInfo = await update.getChat();
+    const title = (chatInfo as Chat.GroupGetChat).title;
 
+    if (!inviteLink) {
       try {
         await this.saveCommunity(chatId, title);
       } catch (error) {
@@ -106,7 +106,11 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
       // right now only add points to owner of the link
       communityUser = await this.communityUserModel.findOneAndUpdate(
         { userId: update.chatMember.new_chat_member.user.id, chatId: chatId },
-        { $inc: { points: 50 } },
+        {
+          $inc: { points: 50 },
+          communityName: title,
+          isAdmin: admins.some((owner) => owner.user.id === update.chatMember.new_chat_member.user.id),
+        },
         { upsert: true, new: true },
       );
     } catch (error) {
