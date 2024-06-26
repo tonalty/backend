@@ -33,7 +33,7 @@ export class MessageReactionData implements HistoryDataType {
 }
 
 export class ReferralJoinData implements HistoryDataType {
-  type = 'refferalJoin';
+  type = 'referralJoin';
   constructor(
     public readonly userId: number,
     public readonly chatId: number,
