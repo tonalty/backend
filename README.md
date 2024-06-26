@@ -22,14 +22,26 @@ cd nestjs-mongodb-boilerplate
 yarn install --frozen-lockfile
 ```
 
-6. Build and run the Docker image.
+6. Add file environment variables. For development it should have name `stage.dev.env`, where:
+
+- PORT - application port. (Example: 3000)
+- DB_URL - mongoDb url starting with `mongodb+srv://`. (Example: mongodb+srv://login:password@hostname/dbName?retryWrites=true&w=majority&appName=Cluster0)
+- BOT_TOKEN - bot token given to you by BotFather. For more info please follow the [tutorial](https://core.telegram.org/bots/tutorial)
+- BOT_NAME - bot name from the [tutorial](https://core.telegram.org/bots/tutorial). The name after `@` symbol. (Example: for `@test_bot` we need to use `test_bot`)
+- WEB_APP_NAME - bot web app name from the [tutorial](https://core.telegram.org/bots/tutorial).
+- THRESHOLD_FOR_POINTS - put `1` here.
+- MNEMONIC - mnemonic from TON
+- AUTH_DATE_SEC_TIMEOUT - put `1800`
+- POINTS_REWARD - put `5`
+
+7. Build and run the Docker image.
 
 ```bash
 yarn docker-compose:dev
 ```
 
-7. Access the app at http://localhost:3000.
-8. Make file changes and it will automatically rebuild the app.
+8. Access the app at http://localhost:3000.
+9. Make file changes and it will automatically rebuild the app.
 
 ## Running All Tests
 
