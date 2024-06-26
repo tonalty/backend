@@ -1,13 +1,15 @@
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Document, Types } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Message } from 'src/data/message.entity';
 import { Logger } from 'mongodb';
 import { MessageReactionUpdated } from 'telegraf/typings/core/types/typegram';
 import { inspect } from 'util';
 import { CommunityUser } from 'src/data/communityUser.entity';
 import { MessageReactionData, CommunityUserHistory } from 'src/data/communityUserHistory.entity';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class ReactionHandlerService {
   private readonly logger = new Logger(ReactionHandlerService.name);
   private readonly thresholdForPoints: number;

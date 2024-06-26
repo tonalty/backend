@@ -4,8 +4,9 @@ import { Message } from 'src/data/message.entity';
 import { Context, NarrowedContext } from 'telegraf';
 import { Update } from 'telegraf/typings/core/types/typegram';
 import { Community } from 'src/data/community.entity';
-import { Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
+@Injectable()
 export class MessageHandlerService {
   private readonly logger = new Logger(MessageHandlerService.name);
 

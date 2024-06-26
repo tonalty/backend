@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Community } from 'src/data/community.entity';
@@ -7,6 +7,8 @@ import { ChatMemberAdministrator, ChatMemberOwner } from 'telegraf/typings/core/
 
 @Injectable()
 export abstract class AbstractChatMemberHandler {
+  protected readonly logger = new Logger(AbstractChatMemberHandler.name);
+
   constructor(
     @InjectModel(Community.name) protected readonly communityModel: Model<Community>,
     @InjectModel(CommunityUser.name) protected readonly communityUserModel: Model<CommunityUser>,
@@ -34,6 +36,12 @@ export abstract class AbstractChatMemberHandler {
     communityName: string,
     admins: (ChatMemberOwner | ChatMemberAdministrator)[],
   ) {
+    this.logger.log('saveUserCommunity');
+    this.logger.log('chatId', chatId);
+    this.logger.log('userId', userId);
+    this.logger.log('communityName', communityName);
+    this.logger.log('admins', admins);
+
     return await this.communityUserModel.findOneAndUpdate(
       { userId, chatId },
       {
@@ -42,8 +50,8 @@ export abstract class AbstractChatMemberHandler {
           chatId,
           points: 0,
           isAdmin: admins.some((owner) => owner.user.id === userId),
+          communityName: communityName ?? `private-${chatId}`,
         },
-        communityName: communityName ?? `private-${chatId}`,
       },
       { upsert: true },
     );

@@ -12,8 +12,6 @@ import { CommunityUserHistory, ReferralJoinData } from 'src/data/communityUserHi
 
 @Injectable()
 export class ChatMemberHandlerService extends AbstractChatMemberHandler {
-  private readonly logger = new Logger(ChatMemberHandlerService.name);
-
   constructor(
     @InjectModel(Referral.name) private referralModel: Model<Referral>,
     @InjectModel(CommunityUser.name) protected communityUserModel: Model<CommunityUser>,
@@ -28,6 +26,7 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
   }
 
   async handle(update: NarrowedContext<Context<Update>, Update.ChatMemberUpdate>) {
+    this.logger.log('update.chatMember.new_chat_member.status', update.chatMember.new_chat_member.status);
     // react when it is new user or user that previously created group joined
     const validStatuses = ['member', 'creator', 'left'];
 
@@ -64,9 +63,9 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
       return;
     }
 
-    const result = await this.referralModel.findOne({ inviteLink: inviteLink });
+    const referral = await this.referralModel.findOne({ inviteLink: inviteLink });
 
-    if (!result) {
+    if (!referral) {
       throw new Error(`Could not find referral with by inviteLink ${inviteLink}`);
     }
 
@@ -78,7 +77,7 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
       throw new Error('Joined user is bot');
     }
 
-    if (result.ownerId === update.chatMember.new_chat_member.user.id) {
+    if (referral.ownerId === update.chatMember.new_chat_member.user.id) {
       throw new Error('Owner id of the link is the same as user id, so points would not be assigned');
     }
 
@@ -86,7 +85,7 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
     try {
       referralUpdate = await this.referralModel.findOneAndUpdate(
         {
-          _id: result._id,
+          _id: referral._id,
           // only update visitorIds if we do not have this user previously else return null
           visitorIds: {
             $ne: update.chatMember.new_chat_member.user.id,
@@ -106,9 +105,9 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
     try {
       // right now only add points to owner of the link
       communityUser = await this.communityUserModel.findOneAndUpdate(
-        { userId: result.ownerId, chatId: chatId },
+        { userId: update.chatMember.new_chat_member.user.id, chatId: chatId },
         { $inc: { points: 50 } },
-        { upsert: true },
+        { upsert: true, new: true },
       );
     } catch (error) {
       throw new Error(`Error while increasing points ${error}`);
@@ -120,7 +119,12 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
         await this.communityUserHistoryModel.create({
           userId: communityUser.userId,
           communityId: communityUser.chatId,
-          data: new ReferralJoinData(result.ownerId, result.chatId, 50, result.ownerName),
+          data: new ReferralJoinData(
+            update.chatMember.new_chat_member.user.id,
+            update.chatMember.chat.id,
+            50,
+            referral.ownerName,
+          ),
         });
       } catch (error) {
         throw new Error(`Error while adding user history record ${error}`);

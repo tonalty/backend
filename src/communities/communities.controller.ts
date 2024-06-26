@@ -24,12 +24,19 @@ export class CommunitiesController {
     return this.communitiesService.getAdminCommunities(this.tmaService.getUserId(tmaInitData));
   }
 
+  @Get('all')
+  getAllCommunities(@Headers('tmaInitData') tmaInitData: string) {
+    this.logger.log('getAllCommunities', JSON.stringify(tmaInitData));
+
+    return this.communitiesService.getAllCommunities(this.tmaService.getUserId(tmaInitData));
+  }
+
   @Get(':id')
   async getUserCommunity(
     @Headers('tmaInitData') tmaInitData: string,
     @Param('id') id: number,
   ): Promise<CommunityUser | undefined> {
-    const allCommunities = await this.getUserCommunities(tmaInitData);
+    const allCommunities = await this.getAllCommunities(tmaInitData);
 
     const userCommunity = allCommunities.find((userCommunity) => userCommunity.chatId === id);
 

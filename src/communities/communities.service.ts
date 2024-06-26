@@ -14,11 +14,16 @@ export class CommunitiesService {
   ) {}
 
   getUserCommunities(userId: number): Promise<Array<CommunityUser>> {
-    return this.communityUserModel.find({ userId: userId }, {}, { $sort: { points: -1, _id: 1 } });
+    // need to check what to do here
+    return this.communityUserModel.find({ userId: userId, isAdmin: { $exists: false } }).sort({ points: -1, _id: 1 });
   }
 
   getAdminCommunities(userId: number): Promise<CommunityUser[]> {
-    return this.communityUserModel.find({ userId: userId, isAdmin: true }, {}, { $sort: { points: -1, _id: 1 } });
+    return this.communityUserModel.find({ userId: userId, isAdmin: true }).sort({ points: -1, _id: 1 });
+  }
+
+  getAllCommunities(userId: number) {
+    return this.communityUserModel.find({ userId: userId }, {}, { $sort: { points: -1, _id: 1 } });
   }
 
   async getUserPoints(userId: number, chatId: number): Promise<number> {

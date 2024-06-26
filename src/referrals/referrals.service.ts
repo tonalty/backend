@@ -31,7 +31,9 @@ export class ReferralsService {
   }
 
   async generateReferral(userId: number, chatId: number, title: string, name: string): Promise<string> {
-    this.logger.log('Hello world');
+    this.logger.log('this.botToken', this.botToken);
+    this.logger.log('this.botName', this.botName);
+    this.logger.log('this.webAppName', this.webAppName);
     const referral = await this.referralModel.findOne({
       chatId: chatId,
       ownerId: userId,
@@ -45,6 +47,7 @@ export class ReferralsService {
       this.logger.log('_id generated', _id);
 
       try {
+        // create only once
         inviteLinkResponse = await this.httpService.axiosRef.post(
           `https://api.telegram.org/bot${this.botToken}/createChatInviteLink`,
           {
@@ -67,11 +70,8 @@ export class ReferralsService {
         },
       } = inviteLinkResponse;
 
-      const payload = Buffer.from(JSON.stringify({ ownerId: userId, title, name, telegramInviteLink }))
-        .toString('base64')
-        .replace(/=+$/, '');
-
-      const link = `https://t.me/${this.botName}/${this.webAppName}?startapp=${encodeURIComponent(payload)}`;
+      const params = { ownerId: userId, title, name, telegramInviteLink };
+      const link = this.createReferralLink(params);
 
       try {
         await this.referralModel.create({
@@ -90,6 +90,12 @@ export class ReferralsService {
     }
 
     return Promise.resolve(referral.link);
+  }
+
+  createReferralLink(params: unknown) {
+    const payload = Buffer.from(JSON.stringify(params)).toString('base64').replace(/=+$/, '');
+
+    return `https://t.me/${this.botName}/${this.webAppName}?startapp=${encodeURIComponent(payload)}`;
   }
 
   decodeStartParam(startParam: string) {

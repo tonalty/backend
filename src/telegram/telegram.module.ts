@@ -5,8 +5,11 @@ import { MessageHandlerService } from './messageHandler.service';
 import { ReactionHandlerService } from './reactionHandler.service';
 import { ChatMemberHandlerService } from './chatMemberHandler.service';
 import { MyChatMemberHandlerService } from './myChatMemberHandler.service';
+import { ReferralsService } from 'src/referrals/referrals.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
+  imports: [HttpModule],
   controllers: [TelegramController],
   providers: [
     TelegramService,
@@ -14,6 +17,7 @@ import { MyChatMemberHandlerService } from './myChatMemberHandler.service';
     ReactionHandlerService,
     ChatMemberHandlerService,
     MyChatMemberHandlerService,
+    ReferralsService,
   ],
 })
 export class TelegramModule {}
