@@ -15,7 +15,7 @@ export class CommunitiesService {
 
   getUserCommunities(userId: number): Promise<Array<CommunityUser>> {
     // need to check what to do here
-    return this.communityUserModel.find({ userId: userId, isAdmin: false }).sort({ points: -1, _id: 1 });
+    return this.communityUserModel.find({ userId: userId }).sort({ points: -1, _id: 1 });
   }
 
   getAdminCommunities(userId: number): Promise<CommunityUser[]> {
