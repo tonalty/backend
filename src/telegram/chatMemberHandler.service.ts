@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Referral } from 'src/data/referral.entity';
@@ -43,19 +43,21 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
 
     this.logger.log('inviteLink', inviteLink);
 
+    const admins = await update.getChatAdministrators();
+    const chatInfo = await update.getChat();
+    const title = (chatInfo as Chat.GroupGetChat).title;
+
     if (!inviteLink) {
-      const admins = await update.getChatAdministrators();
-      const chatInfo = await update.getChat();
-      const title = (chatInfo as Chat.GroupGetChat).title;
+      // TODO: check this
+      // try {
+      //   // TODO: check this what should be here i dont know
+      //   await this.createCommunityIfNotExist(chatId, title, undefined);
+      // } catch (error) {
+      //   this.logger.error(error);
+      // }
 
       try {
-        await this.saveCommunity(chatId, title);
-      } catch (error) {
-        this.logger.error(error);
-      }
-
-      try {
-        await this.saveUserCommunity(chatId, update.chatMember.new_chat_member.user.id, title, admins);
+        await this.createCommunityUserIfNoExist(chatId, update.chatMember.new_chat_member.user.id, title, admins);
       } catch (error) {
         this.logger.error(error);
       }
@@ -102,11 +104,27 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
     }
 
     let communityUser;
+    let triggers;
+
+    try {
+      triggers = (await this.communityModel.findOne({ chatId: chatId }, { triggers: 1 }))?.triggers;
+    } catch (error) {
+      this.logger.log(error);
+    }
+
+    if (!triggers) {
+      throw new Error('No triggers recieved');
+    }
+
     try {
       // right now only add points to owner of the link
       communityUser = await this.communityUserModel.findOneAndUpdate(
         { userId: update.chatMember.new_chat_member.user.id, chatId: chatId },
-        { $inc: { points: 50 } },
+        {
+          $inc: { points: triggers.referral.inviterPoints },
+          communityName: title,
+          isAdmin: admins.some((owner) => owner.user.id === update.chatMember.new_chat_member.user.id),
+        },
         { upsert: true, new: true },
       );
     } catch (error) {
@@ -122,8 +140,8 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
           data: new ReferralJoinData(
             update.chatMember.new_chat_member.user.id,
             update.chatMember.chat.id,
-            50,
-            referral.ownerName,
+            triggers.referral.inviterPoints,
+            update.chatMember.new_chat_member.user.username || String(update.chatMember.new_chat_member.user.id),
           ),
         });
       } catch (error) {

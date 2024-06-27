@@ -10,6 +10,7 @@ import { TmaModule } from './tma/tma.module';
 import { TokensModule } from './tokens/tokens.module';
 import { ReferralsModule } from './referrals/referrals.module';
 import { HistoryModule } from './history/history.module';
+import { TriggersModule } from './triggers/triggers.module';
 import { RewardModule } from './reward/reward.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { TempImageModule } from './temp/image/image.module';
@@ -32,6 +33,7 @@ export const PUBLIC_ENDPOINT = '/public/';
     TokensModule,
     ReferralsModule,
     HistoryModule,
+    TriggersModule,
     RewardModule,
     ServeStaticModule.forRoot({
       rootPath: PUBLIC_FS_DIRECTORY,

@@ -56,7 +56,11 @@ export class TmaService {
   getUserId(tmaInitData: string) {
     this.logger.log('tmaInitData', tmaInitData);
 
-    // const webAppInitData: WebAppInitData = { auth_date: 0, hash: '', user: { id: 307294448, first_name: 'dummy' } };
+    // const webAppInitData: WebAppInitData = {
+    //   auth_date: 0,
+    //   hash: '',
+    //   user: { id: 307294448, first_name: 'PROD LINK' },
+    // };
     const webAppInitData = this.parseWebAppInitData(tmaInitData);
 
     if (!webAppInitData.user) {
@@ -75,7 +79,7 @@ export class TmaService {
     // const webAppInitData: WebAppInitData = {
     //   auth_date: 0,
     //   hash: '',
-    //   user: { id: 147388258, first_name: 'super' },
+    //   user: { id: 307294448, first_name: 'PROD LINK' },
     // };
     const webAppInitData = this.parseWebAppInitData(tmaInitData);
 

@@ -5,7 +5,7 @@ import { DeleteResult } from 'mongodb';
 import { Injectable } from '@nestjs/common';
 import { ReferralsService } from 'src/referrals/referrals.service';
 import { InjectModel } from '@nestjs/mongoose';
-import { Community } from 'src/data/community.entity';
+import { Community, ReactionTrigger, ReferralTrigger, Triggers } from 'src/data/community.entity';
 import { CommunityUser } from 'src/data/communityUser.entity';
 import { Model } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
@@ -38,14 +38,26 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
   async handle(update: NarrowedContext<Context<Update>, Update.MyChatMemberUpdate>) {
     this.logger.log('update.myChatMember.new_chat_member', update.myChatMember.new_chat_member);
 
+    // TODO: check this when we change settings of the chat from private to public
+    if (update.myChatMember.chat.type === 'supergroup' || update.myChatMember.chat.type === 'private') {
+      this.logger.log('Chat type was changed', update.myChatMember.chat.type);
+
+      return;
+    }
+
     if (update.myChatMember.new_chat_member.status === 'member') {
       const admins = await update.getChatAdministrators();
       const chatInfo = await update.getChat();
       const title = (chatInfo as Chat.GroupGetChat).title;
 
-      await this.saveCommunity(update.myChatMember.chat.id, title);
+      const triggers: Triggers = {
+        reaction: new ReactionTrigger(0, 0, false),
+        referral: new ReferralTrigger(0, 0, false),
+      };
 
-      await this.saveUserCommunity(update.myChatMember.chat.id, update.myChatMember.from.id, title, admins);
+      await this.createCommunityIfNotExist(update.myChatMember.chat.id, title, triggers);
+
+      await this.createCommunityUserIfNoExist(update.myChatMember.chat.id, update.myChatMember.from.id, title, admins);
 
       await update.sendMessage(`https://t.me/${this.botName}/${this.webAppName}`);
       // await update.sendMessage(`${this.referralService.createReferralLink({ chatId: update.myChatMember.chat.id })}`);
