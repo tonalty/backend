@@ -127,7 +127,7 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
             update.chatMember.new_chat_member.user.id,
             update.chatMember.chat.id,
             50,
-            referral.ownerName,
+            update.chatMember.new_chat_member.user.username || String(update.chatMember.new_chat_member.user.id),
           ),
         });
       } catch (error) {
