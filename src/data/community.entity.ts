@@ -18,6 +18,22 @@ export class ReferralTrigger {
   ) {}
 }
 
+interface IReactionTrigger {
+  readonly points: number;
+  readonly threshold: number;
+  readonly isEnabled: boolean;
+}
+interface IReferralTrigger {
+  readonly inviterPoints: number;
+  readonly inviteePoints: number;
+  readonly isEnabled: boolean;
+}
+
+export interface Triggers {
+  referral: IReferralTrigger;
+  reaction: IReactionTrigger;
+}
+
 @Schema()
 export class Community {
   @Prop()
@@ -38,6 +54,7 @@ export class Community {
   @Prop()
   tokenAddress?: string;
 
+  // TODO: rewrite somehow
   @Prop({ type: mongoose.Schema.Types.Mixed })
   triggers: {
     referral: ReferralTrigger;

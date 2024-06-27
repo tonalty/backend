@@ -26,6 +26,8 @@ export class TriggersController {
 
   @Patch('community')
   updateTriggers(@Headers('tmaInitData') tmaInitData: string, @Body() triggersDto: TriggersDto): Promise<boolean> {
+    this.logger.log('triggersDto', triggersDto);
+
     try {
       this.tmaService.getUserId(tmaInitData);
     } catch (error) {
