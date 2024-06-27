@@ -14,25 +14,19 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { CommunitiesService } from 'src/communities/communities.service';
 import { TmaService } from 'src/tma/tma.service';
 import { AdminRewardDto } from './dto/AdminRewardDto';
 import { CreateRewardDto } from './dto/CreateRewardDto';
 import { RewardPreview } from './dto/RewardPreviewDto';
+import { UpdateRewardDto } from './dto/UpdateRewardDto';
 import { UserRewardDto } from './dto/UserRewardDto';
 import { RewardService } from './reward.service';
-import { UpdateRewardDto } from './dto/UpdateRewardDto';
-import { ApiBody } from '@nestjs/swagger';
 
 @Controller('reward')
 export class RewardController {
   private readonly logger = new Logger(RewardController.name);
 
-  constructor(
-    private readonly tmaService: TmaService,
-    private readonly rewardsService: RewardService,
-    private readonly communitiesService: CommunitiesService,
-  ) {}
+  constructor(private readonly tmaService: TmaService, private readonly rewardsService: RewardService) {}
 
   @HttpCode(HttpStatus.CREATED)
   @Post('/')
@@ -41,16 +35,14 @@ export class RewardController {
     @Body() rewardDto: CreateRewardDto,
   ): Promise<AdminRewardDto> {
     const userId = this.tmaService.getUserId(tmaInitData);
-    await this.communitiesService.validateUserIsAdmin(userId, rewardDto.chatId);
-    return this.rewardsService.createReward(rewardDto);
+    return this.rewardsService.createReward(userId, rewardDto);
   }
 
   @HttpCode(HttpStatus.CREATED)
   @Put('/')
   async updateReward(@Headers('tmaInitData') tmaInitData: string, @Body() updateRewardDto: UpdateRewardDto) {
     const userId = this.tmaService.getUserId(tmaInitData);
-    await this.communitiesService.validateUserIsAdmin(userId, updateRewardDto.chatId);
-    const status = await this.rewardsService.updateReward(updateRewardDto);
+    const status = await this.rewardsService.updateReward(userId, updateRewardDto);
     if (!status) {
       throw new BadRequestException('Error during record update');
     }
@@ -63,8 +55,7 @@ export class RewardController {
     @Param('chatId') chatId: number,
   ): Promise<AdminRewardDto | UserRewardDto> {
     const userId = this.tmaService.getUserId(tmaInitData);
-    await this.communitiesService.validateUserIsAdmin(userId, chatId);
-    const result = await this.rewardsService.getAdminReward(rewardId, chatId);
+    const result = await this.rewardsService.getAdminReward(userId, rewardId, chatId);
     if (result) {
       return result;
     } else {
@@ -79,8 +70,7 @@ export class RewardController {
     @Param('chatId') chatId: number,
   ): Promise<UserRewardDto> {
     const userId = this.tmaService.getUserId(tmaInitData);
-    await this.communitiesService.validateCommunityUserPresent(userId, chatId);
-    const result = await this.rewardsService.getUserReward(rewardId, chatId);
+    const result = await this.rewardsService.getUserReward(userId, rewardId, chatId);
     if (result) {
       return result;
     } else {
@@ -96,7 +86,6 @@ export class RewardController {
     @Query('size') size: number,
   ): Promise<Array<RewardPreview>> {
     const userId = this.tmaService.getUserId(tmaInitData);
-    await this.communitiesService.validateCommunityUserPresent(userId, chatId);
     // check if page and size are valid
     if (isNaN(page) || page < 0 || isNaN(size) || size < 0) {
       throw new BadRequestException('Invalid pagination params. Please supply page and size query fields');
@@ -109,7 +98,7 @@ export class RewardController {
     const limit = size;
     const offset = page * limit;
     this.logger.log(`chatId = ${chatId}`);
-    return this.rewardsService.getRewards(chatId, limit, offset);
+    return this.rewardsService.getRewards(userId, chatId, limit, offset);
   }
 
   @Delete('/:rewardId/chat/:chatId')
@@ -119,10 +108,19 @@ export class RewardController {
     @Param('chatId') chatId: number,
   ) {
     const userId = this.tmaService.getUserId(tmaInitData);
-    await this.communitiesService.validateUserIsAdmin(userId, chatId);
-    const result = await this.rewardsService.deleteReward(rewardId, chatId);
+    const result = await this.rewardsService.deleteReward(userId, rewardId, chatId);
     if (!result) {
       throw new NotFoundException(`Unable to find reward by id ${rewardId} and chatId ${chatId}`);
     }
+  }
+
+  @Post('/:rewardId/chat/:chatId/buy')
+  async buyReward(
+    @Headers('tmaInitData') tmaInitData: string,
+    @Param('rewardId') rewardId: string,
+    @Param('chatId') chatId: number,
+  ) {
+    const userId = this.tmaService.getUserId(tmaInitData);
+    this.rewardsService.buyReward(rewardId, chatId, userId);
   }
 }

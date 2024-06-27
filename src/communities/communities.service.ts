@@ -41,6 +41,27 @@ export class CommunitiesService {
     return communityUser;
   }
 
+  async decreaseCommunityUserPoints(
+    userId: number,
+    chatId: number,
+    pointsToSubtract: number,
+  ): Promise<CommunityUser | null> {
+    this.logger.log(`Attempting to decrease communityUser<${chatId}, ${userId}> by ${pointsToSubtract}`);
+    const result = await this.communityUserModel.findOneAndUpdate(
+      { userId: userId, chatId: chatId, $expr: { $gte: ['$points', pointsToSubtract] } },
+      {
+        $inc: { points: -1 * pointsToSubtract },
+      },
+    );
+    if (result) {
+      this.logger.log('The decrease was successful');
+      return result;
+    } else {
+      this.logger.log('The decrease failed');
+      return result;
+    }
+  }
+
   async validateCommunityUserPresent(userId: number, chatId: number) {
     await this.getCommunityUser(userId, chatId);
   }

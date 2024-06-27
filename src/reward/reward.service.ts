@@ -1,13 +1,15 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { CommunitiesService } from 'src/communities/communities.service';
 import { Reward } from 'src/data/reward.entity';
+import { HistoryService } from 'src/history/history.service';
+import { TempImageService } from 'src/temp/image/image.service';
 import { AdminRewardDto } from './dto/AdminRewardDto';
 import { CreateRewardDto } from './dto/CreateRewardDto';
 import { RewardPreview } from './dto/RewardPreviewDto';
-import { UserRewardDto } from './dto/UserRewardDto';
-import { TempImageService } from 'src/temp/image/image.service';
 import { UpdateRewardDto } from './dto/UpdateRewardDto';
+import { UserRewardDto } from './dto/UserRewardDto';
 
 @Injectable()
 export class RewardService {
@@ -16,9 +18,12 @@ export class RewardService {
   constructor(
     @InjectModel(Reward.name) private readonly rewardModel: Model<Reward>,
     private readonly tempImageService: TempImageService,
+    private readonly communitiesService: CommunitiesService,
+    private readonly historyService: HistoryService,
   ) {}
 
-  async createReward(rewardDto: CreateRewardDto): Promise<AdminRewardDto> {
+  async createReward(userId: number, rewardDto: CreateRewardDto): Promise<AdminRewardDto> {
+    await this.communitiesService.validateUserIsAdmin(userId, rewardDto.chatId);
     const rewardId = new Types.ObjectId();
     const imagePublicPath = await this.tempImageService.saveImageToPermanent(rewardDto.imageId, rewardId.toHexString());
     const reward = await this.rewardModel.create({
@@ -29,7 +34,8 @@ export class RewardService {
     return new AdminRewardDto(reward);
   }
 
-  async updateReward(updateRewardDto: UpdateRewardDto): Promise<boolean> {
+  async updateReward(userId: number, updateRewardDto: UpdateRewardDto): Promise<boolean> {
+    await this.communitiesService.validateUserIsAdmin(userId, updateRewardDto.chatId);
     let imagePublicPath = updateRewardDto.imageUrl;
     let isImageUpdated = false;
     if (updateRewardDto.imageId) {
@@ -53,7 +59,8 @@ export class RewardService {
     }
   }
 
-  async getAdminReward(rewardId: string, chatId: number): Promise<AdminRewardDto | null> {
+  async getAdminReward(userId: number, rewardId: string, chatId: number): Promise<AdminRewardDto | null> {
+    await this.communitiesService.validateUserIsAdmin(userId, chatId);
     const reward = await this.rewardModel.findOne({ _id: new Types.ObjectId(rewardId), chatId: chatId });
     if (reward) {
       return new AdminRewardDto(reward);
@@ -62,7 +69,8 @@ export class RewardService {
     }
   }
 
-  async getUserReward(rewardId: string, chatId: number): Promise<UserRewardDto | null> {
+  async getUserReward(userId: number, rewardId: string, chatId: number): Promise<UserRewardDto | null> {
+    await this.communitiesService.validateCommunityUserPresent(userId, chatId);
     const reward = await this.rewardModel.findOne({ _id: new Types.ObjectId(rewardId), chatId: chatId });
     if (reward) {
       return new UserRewardDto(reward);
@@ -71,7 +79,8 @@ export class RewardService {
     }
   }
 
-  async getRewards(chatId: number, limit: number, offset: number): Promise<Array<RewardPreview>> {
+  async getRewards(userId: number, chatId: number, limit: number, offset: number): Promise<Array<RewardPreview>> {
+    await this.communitiesService.validateCommunityUserPresent(userId, chatId);
     const rewards = await this.rewardModel.find(
       { chatId: chatId },
       { _id: 1, imageUrl: 1, title: 1, value: 1 },
@@ -84,12 +93,25 @@ export class RewardService {
     }
   }
 
-  async deleteReward(rewardId: string, chatId: number): Promise<boolean> {
+  async deleteReward(userId: number, rewardId: string, chatId: number): Promise<boolean> {
+    await this.communitiesService.validateUserIsAdmin(userId, chatId);
     const result = await this.rewardModel.deleteOne({ _id: new Types.ObjectId(rewardId), chatId: chatId });
     if (result.deletedCount === 1) {
       return true;
     } else {
       return false;
     }
+  }
+
+  async buyReward(rewardId: string, chatId: number, userId: number) {
+    const reward = await this.rewardModel.findOne({ _id: new Types.ObjectId(rewardId), chatId: chatId });
+    if (!reward) {
+      throw new NotFoundException(`Unable to find reward by id ${rewardId} in chat ${chatId}`);
+    }
+    const result = await this.communitiesService.decreaseCommunityUserPoints(userId, chatId, reward.value);
+    if (!result) {
+      throw new BadRequestException('Unable to decrease points');
+    }
+    this.historyService.createRewardBuyRecord(userId, chatId, reward);
   }
 }
