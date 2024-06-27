@@ -1,6 +1,6 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Community } from 'src/data/community.entity';
+import { Community, Triggers } from 'src/data/community.entity';
 import { TriggersDto } from './dto/triggersDto';
 import { Logger } from '@nestjs/common';
 
@@ -9,7 +9,7 @@ export class TriggersService {
 
   constructor(@InjectModel(Community.name) private readonly communityModel: Model<Community>) {}
 
-  async getTriggersByCommunity(chatId: number): Promise<Community> {
+  async getTriggersByCommunity(chatId: number): Promise<Triggers> {
     try {
       const community = await this.communityModel.findOne({ chatId: chatId });
 
@@ -17,7 +17,7 @@ export class TriggersService {
         throw new Error(`Could not find community with chatId ${chatId}`);
       }
 
-      return community;
+      return community.triggers;
     } catch (error) {
       throw new Error(error);
     }

@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Headers } from '@nestjs/common';
 import { TriggersService } from './triggers.service';
 import { TmaService } from 'src/tma/tma.service';
-import { Community } from 'src/data/community.entity';
+import { Triggers } from 'src/data/community.entity';
 import { TriggersDto } from './dto/triggersDto';
 
 @Controller('triggers')
@@ -12,7 +12,7 @@ export class TriggersController {
   getTriggersByCommunity(
     @Headers('tmaInitData') tmaInitData: string,
     @Param('chatId') chatId: number,
-  ): Promise<Community> {
+  ): Promise<Triggers> {
     try {
       this.tmaService.getUserId(tmaInitData);
     } catch (error) {
