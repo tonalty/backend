@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types, Schema as MongooseSchema } from 'mongoose';
+import { Reward } from './reward.entity';
 
 @Schema({ timestamps: true, autoIndex: true })
 export class CommunityUserHistory {
@@ -14,13 +15,13 @@ export class CommunityUserHistory {
 }
 
 export const CommunityUserHistorySchema = SchemaFactory.createForClass(CommunityUserHistory);
-CommunityUserHistorySchema.index({ userId: 1, createdAt: -1 });
+CommunityUserHistorySchema.index({ userId: 1, communityId: 1, createdAt: -1 });
 
 interface HistoryDataType {
   type: string;
 }
 
-export type CommunityUserHistoryData = MessageReactionData | ReferralJoinData;
+export type CommunityUserHistoryData = MessageReactionData | ReferralJoinData | RewardBuyData;
 
 export class MessageReactionData implements HistoryDataType {
   type = 'messageReaction';
@@ -40,4 +41,21 @@ export class ReferralJoinData implements HistoryDataType {
     public readonly points: number,
     public readonly username: string,
   ) {}
+}
+
+export class RewardBuyData implements HistoryDataType {
+  type: 'rewardBuy';
+  rewardTitle: string;
+  rewardImageUrl: string;
+  rewardValue: number;
+  rewardDescription: string;
+  rewardMessage: string;
+
+  constructor(reward: Reward) {
+    this.rewardTitle = reward.title;
+    this.rewardImageUrl = reward.imageUrl;
+    this.rewardValue = reward.value;
+    this.rewardDescription = reward.description;
+    this.rewardMessage = reward.rewardMessage;
+  }
 }

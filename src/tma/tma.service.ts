@@ -89,4 +89,8 @@ export class TmaService {
 
     return webAppInitData.user;
   }
+
+  validateInitData(tmaInitData: string) {
+    this.getUserId(tmaInitData);
+  }
 }

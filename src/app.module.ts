@@ -11,6 +11,13 @@ import { TokensModule } from './tokens/tokens.module';
 import { ReferralsModule } from './referrals/referrals.module';
 import { HistoryModule } from './history/history.module';
 import { TriggersModule } from './triggers/triggers.module';
+import { RewardModule } from './reward/reward.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { TempImageModule } from './temp/image/image.module';
+import { join } from 'path';
+
+export const PUBLIC_FS_DIRECTORY = join(__dirname, 'public');
+export const PUBLIC_ENDPOINT = '/public/';
 
 @Module({
   imports: [
@@ -27,6 +34,12 @@ import { TriggersModule } from './triggers/triggers.module';
     ReferralsModule,
     HistoryModule,
     TriggersModule,
+    RewardModule,
+    ServeStaticModule.forRoot({
+      rootPath: PUBLIC_FS_DIRECTORY,
+      serveRoot: PUBLIC_ENDPOINT,
+    }),
+    TempImageModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -32,4 +32,44 @@ export class CommunitiesService {
 
     return result[0].points;
   }
+
+  async getCommunityUser(userId: number, chatId: number): Promise<CommunityUser> {
+    const communityUser = await this.communityUserModel.findOne({ userId: userId, chatId: chatId });
+    if (!communityUser) {
+      throw new Error(`User with id ${userId} does not exist in community ${chatId}`);
+    }
+    return communityUser;
+  }
+
+  async decreaseCommunityUserPoints(
+    userId: number,
+    chatId: number,
+    pointsToSubtract: number,
+  ): Promise<CommunityUser | null> {
+    this.logger.log(`Attempting to decrease communityUser<${chatId}, ${userId}> by ${pointsToSubtract}`);
+    const result = await this.communityUserModel.findOneAndUpdate(
+      { userId: userId, chatId: chatId, $expr: { $gte: ['$points', pointsToSubtract] } },
+      {
+        $inc: { points: -1 * pointsToSubtract },
+      },
+    );
+    if (result) {
+      this.logger.log('The decrease was successful');
+      return result;
+    } else {
+      this.logger.log('The decrease failed');
+      return result;
+    }
+  }
+
+  async validateCommunityUserPresent(userId: number, chatId: number) {
+    await this.getCommunityUser(userId, chatId);
+  }
+
+  async validateUserIsAdmin(userId: number, chatId: number) {
+    const communityUser = await this.getCommunityUser(userId, chatId);
+    if (!communityUser.isAdmin) {
+      throw new Error(`User with id ${userId} is not admin`);
+    }
+  }
 }
