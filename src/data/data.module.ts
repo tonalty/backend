@@ -7,6 +7,8 @@ import { User } from './user.entity';
 import { Referral } from './referral.entity';
 import { CommunityUser, CommunityUserSchema } from './communityUser.entity';
 import { CommunityUserHistory, CommunityUserHistorySchema } from './communityUserHistory.entity';
+import { Reward, RewardSchema } from './reward.entity';
+import { TempImage, TempImageSchema } from './tempImage.entity';
 
 @Global()
 @Module({
@@ -43,6 +45,14 @@ import { CommunityUserHistory, CommunityUserHistorySchema } from './communityUse
         {
           name: Referral.name,
           schema: SchemaFactory.createForClass(Referral),
+        },
+        {
+          name: Reward.name,
+          schema: RewardSchema,
+        },
+        {
+          name: TempImage.name,
+          schema: TempImageSchema,
         },
       ]),
     },

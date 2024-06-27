@@ -1,11 +1,17 @@
 import { Logger, NestApplicationOptions, ValidationPipe } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { AppModule } from './app.module';
-import * as fs from 'fs';
 import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as fs from 'fs';
+import * as morgan from 'morgan';
+import { AppModule } from './app.module';
+import { PUBLIC_FS_DIRECTORY } from './app.module';
+import { existsSync, mkdirSync } from 'fs';
 
 async function bootstrap() {
+  if (!existsSync(PUBLIC_FS_DIRECTORY)) {
+    mkdirSync(PUBLIC_FS_DIRECTORY);
+  }
   const logger = new Logger();
 
   const options: NestApplicationOptions = {
@@ -38,8 +44,11 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document);
 
   const port = Number(app.get(ConfigService).getOrThrow('PORT'));
+  //Configure logger
+  app.use(morgan('tiny'));
   await app.listen(port);
 
+  logger.log(`Public fs path: ${PUBLIC_FS_DIRECTORY}`);
   logger.log(`Application listening on port ${port}`);
 }
 bootstrap();

@@ -37,4 +37,23 @@ export class CommunitiesService {
 
     return result[0].points;
   }
+
+  async getCommunityUser(userId: number, chatId: number): Promise<CommunityUser> {
+    const communityUser = await this.communityUserModel.findOne({ userId: userId, chatId: chatId });
+    if (!communityUser) {
+      throw new Error(`User with id ${userId} does not exist in community ${chatId}`);
+    }
+    return communityUser;
+  }
+
+  async validateCommunityUserPresent(userId: number, chatId: number) {
+    await this.getCommunityUser(userId, chatId);
+  }
+
+  async validateUserIsAdmin(userId: number, chatId: number) {
+    const communityUser = await this.getCommunityUser(userId, chatId);
+    if (!communityUser.isAdmin) {
+      throw new Error(`User with id ${userId} is not admin`);
+    }
+  }
 }
