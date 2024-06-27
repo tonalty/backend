@@ -116,34 +116,72 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
       throw new Error('No triggers recieved');
     }
 
+    this.logger.log('update.chatMember', JSON.stringify(update.chatMember));
+    this.logger.log('referral', JSON.stringify(referral.ownerId));
+
     try {
-      // right now only add points to owner of the link
-      communityUser = await this.communityUserModel.findOneAndUpdate(
-        { userId: update.chatMember.new_chat_member.user.id, chatId: chatId },
+      communityUser = await this.communityUserModel.bulkWrite([
         {
-          $inc: { points: triggers.referral.inviterPoints },
-          communityName: title,
-          isAdmin: admins.some((owner) => owner.user.id === update.chatMember.new_chat_member.user.id),
+          updateOne: {
+            filter: {
+              userId: referral.ownerId,
+              chatId: chatId,
+            },
+            update: {
+              $inc: { points: triggers.referral.inviterPoints },
+              communityName: title,
+              isAdmin: admins.some((owner) => owner.user.id === referral.ownerId),
+            },
+            upsert: true,
+          },
         },
-        { upsert: true, new: true },
-      );
+        {
+          updateOne: {
+            filter: {
+              userId: update.chatMember.from.id,
+              chatId: chatId,
+            },
+            update: {
+              $inc: { points: triggers.referral.inviterPoints },
+              communityName: title,
+              isAdmin: admins.some((owner) => owner.user.id === update.chatMember.from.id),
+            },
+            upsert: true,
+          },
+        },
+      ]);
     } catch (error) {
       throw new Error(`Error while increasing points ${error}`);
     }
 
+    this.logger.log('communityUser', communityUser);
+
     if (communityUser) {
       try {
+        // TODO: CHECK CHAT HISTORY
         // right now only add points to owner of the link
-        await this.communityUserHistoryModel.create({
-          userId: communityUser.userId,
-          communityId: communityUser.chatId,
-          data: new ReferralJoinData(
-            update.chatMember.new_chat_member.user.id,
-            update.chatMember.chat.id,
-            triggers.referral.inviterPoints,
-            update.chatMember.new_chat_member.user.username || String(update.chatMember.new_chat_member.user.id),
-          ),
-        });
+        await this.communityUserHistoryModel.insertMany([
+          {
+            userId: referral.ownerId,
+            communityId: chatId,
+            data: new ReferralJoinData(
+              referral.ownerId,
+              update.chatMember.chat.id,
+              triggers.referral.inviterPoints,
+              update.chatMember.new_chat_member.user.username || String(referral.ownerId),
+            ),
+          },
+          {
+            userId: update.chatMember.from.id,
+            communityId: chatId,
+            data: new ReferralJoinData(
+              update.chatMember.from.id,
+              update.chatMember.chat.id,
+              triggers.referral.inviterPoints,
+              update.chatMember.from.username || String(update.chatMember.from.id),
+            ),
+          },
+        ]);
       } catch (error) {
         throw new Error(`Error while adding user history record ${error}`);
       }
