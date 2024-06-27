@@ -48,11 +48,13 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
     const title = (chatInfo as Chat.GroupGetChat).title;
 
     if (!inviteLink) {
-      try {
-        await this.saveCommunity(chatId, title);
-      } catch (error) {
-        this.logger.error(error);
-      }
+      // TODO: check this
+      // try {
+      //   // TODO: check this what should be here i dont know
+      //   await this.saveCommunity(chatId, title, undefined);
+      // } catch (error) {
+      //   this.logger.error(error);
+      // }
 
       try {
         await this.saveUserCommunity(chatId, update.chatMember.new_chat_member.user.id, title, admins);

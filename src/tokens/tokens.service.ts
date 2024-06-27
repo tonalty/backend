@@ -39,10 +39,8 @@ export class TokensService implements OnModuleInit {
       publicKey: keyPair.publicKey,
       workchain: 0, // https://tonhelloworld.com/01-wallet/#:~:text=Notice%20that%20we%27re,use%20workchain%200.
     });
-
     const endpoint = await getHttpEndpoint({ network: 'testnet' });
     this.tonClient = new TonClient({ endpoint });
-
     this.openedWallet = this.tonClient.open(wallet);
     this.walletSender = this.openedWallet.sender(keyPair.secretKey);
   }
