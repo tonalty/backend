@@ -38,7 +38,7 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
   async handle(update: NarrowedContext<Context<Update>, Update.MyChatMemberUpdate>) {
     this.logger.log('update.myChatMember.new_chat_member', update.myChatMember.new_chat_member);
 
-    // when we change settings of the chat from private to public
+    // TODO: check this when we change settings of the chat from private to public
     if (update.myChatMember.chat.type === 'supergroup' || update.myChatMember.chat.type === 'private') {
       this.logger.log('Chat type was changed', update.myChatMember.chat.type);
 
@@ -55,9 +55,9 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
         referral: new ReferralTrigger(0, 0, false),
       };
 
-      await this.saveCommunity(update.myChatMember.chat.id, title, triggers);
+      await this.createCommunityIfNotExist(update.myChatMember.chat.id, title, triggers);
 
-      await this.saveUserCommunity(update.myChatMember.chat.id, update.myChatMember.from.id, title, admins);
+      await this.createCommunityUserIfNoExist(update.myChatMember.chat.id, update.myChatMember.from.id, title, admins);
 
       await update.sendMessage(`https://t.me/${this.botName}/${this.webAppName}`);
       // await update.sendMessage(`${this.referralService.createReferralLink({ chatId: update.myChatMember.chat.id })}`);

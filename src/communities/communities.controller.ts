@@ -1,5 +1,4 @@
 import { Controller, Get, Headers, Logger, Param } from '@nestjs/common';
-import { Community } from '../data/community.entity';
 import { CommunitiesService } from './communities.service';
 import { TmaService } from 'src/tma/tma.service';
 import { CommunityUser } from 'src/data/communityUser.entity';
@@ -9,13 +8,6 @@ export class CommunitiesController {
   private readonly logger = new Logger(CommunitiesController.name);
 
   constructor(private readonly tmaService: TmaService, private readonly communitiesService: CommunitiesService) {}
-
-  @Get('user')
-  getUserCommunities(@Headers('tmaInitData') tmaInitData: string): Promise<Array<CommunityUser>> {
-    this.logger.log('getUserCommunities', JSON.stringify(tmaInitData));
-
-    return this.communitiesService.getUserCommunities(this.tmaService.getUserId(tmaInitData));
-  }
 
   @Get('admin')
   getAdminCommunities(@Headers('tmaInitData') tmaInitData: string): Promise<Array<CommunityUser>> {

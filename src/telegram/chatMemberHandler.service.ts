@@ -51,13 +51,13 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
       // TODO: check this
       // try {
       //   // TODO: check this what should be here i dont know
-      //   await this.saveCommunity(chatId, title, undefined);
+      //   await this.createCommunityIfNotExist(chatId, title, undefined);
       // } catch (error) {
       //   this.logger.error(error);
       // }
 
       try {
-        await this.saveUserCommunity(chatId, update.chatMember.new_chat_member.user.id, title, admins);
+        await this.createCommunityUserIfNoExist(chatId, update.chatMember.new_chat_member.user.id, title, admins);
       } catch (error) {
         this.logger.error(error);
       }

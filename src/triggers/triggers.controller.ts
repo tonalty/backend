@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Headers } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Headers, Logger } from '@nestjs/common';
 import { TriggersService } from './triggers.service';
 import { TmaService } from 'src/tma/tma.service';
 import { Triggers } from 'src/data/community.entity';
@@ -6,6 +6,8 @@ import { TriggersDto } from './dto/triggersDto';
 
 @Controller('triggers')
 export class TriggersController {
+  private readonly logger = new Logger(TmaService.name);
+
   constructor(private readonly tmaService: TmaService, private readonly triggersService: TriggersService) {}
 
   @Get('community/:chatId')
@@ -16,7 +18,7 @@ export class TriggersController {
     try {
       this.tmaService.getUserId(tmaInitData);
     } catch (error) {
-      throw new Error(error);
+      this.logger.error(error);
     }
 
     return this.triggersService.getTriggersByCommunity(chatId);

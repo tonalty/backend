@@ -14,7 +14,7 @@ export abstract class AbstractChatMemberHandler {
     @InjectModel(CommunityUser.name) protected readonly communityUserModel: Model<CommunityUser>,
   ) {}
 
-  protected async saveCommunity(chatId: number, title: string, triggers: Triggers) {
+  protected async createCommunityIfNotExist(chatId: number, title: string, triggers: Triggers) {
     try {
       // create
       return await this.communityModel.updateOne(
@@ -33,13 +33,13 @@ export abstract class AbstractChatMemberHandler {
     }
   }
 
-  protected async saveUserCommunity(
+  protected async createCommunityUserIfNoExist(
     chatId: number,
     userId: number,
     communityName: string,
     admins: (ChatMemberOwner | ChatMemberAdministrator)[],
   ) {
-    this.logger.log('saveUserCommunity');
+    this.logger.log('createCommunityUserIfNoExist');
     this.logger.log('chatId', chatId);
     this.logger.log('userId', userId);
     this.logger.log('communityName', communityName);
