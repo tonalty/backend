@@ -61,9 +61,6 @@ Start using our mini-app to be able to earn points and get rewards.`,
       {
         $setOnInsert: {
           chatId: update.chat.id,
-          // logic when we calculate jetons here
-          remainingPoints: 0,
-          threshold: -1,
         },
 
         title: update.chat.title,

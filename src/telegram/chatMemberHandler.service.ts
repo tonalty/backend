@@ -48,14 +48,16 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
     const title = (chatInfo as Chat.GroupGetChat).title;
 
     if (!inviteLink) {
-      try {
-        await this.saveCommunity(chatId, title);
-      } catch (error) {
-        this.logger.error(error);
-      }
+      // TODO: check this
+      // try {
+      //   // TODO: check this what should be here i dont know
+      //   await this.createCommunityIfNotExist(chatId, title, undefined);
+      // } catch (error) {
+      //   this.logger.error(error);
+      // }
 
       try {
-        await this.saveUserCommunity(chatId, update.chatMember.new_chat_member.user.id, title, admins);
+        await this.createCommunityUserIfNoExist(chatId, update.chatMember.new_chat_member.user.id, title, admins);
       } catch (error) {
         this.logger.error(error);
       }
@@ -127,7 +129,7 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
             update.chatMember.new_chat_member.user.id,
             update.chatMember.chat.id,
             50,
-            referral.ownerName,
+            update.chatMember.new_chat_member.user.username || String(update.chatMember.new_chat_member.user.id),
           ),
         });
       } catch (error) {

@@ -10,6 +10,7 @@ import { TmaModule } from './tma/tma.module';
 import { TokensModule } from './tokens/tokens.module';
 import { ReferralsModule } from './referrals/referrals.module';
 import { HistoryModule } from './history/history.module';
+import { TriggersModule } from './triggers/triggers.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { HistoryModule } from './history/history.module';
     TokensModule,
     ReferralsModule,
     HistoryModule,
+    TriggersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
