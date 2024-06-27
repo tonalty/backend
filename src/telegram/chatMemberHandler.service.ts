@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Referral } from 'src/data/referral.entity';
@@ -104,12 +104,24 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
     }
 
     let communityUser;
+    let triggers;
+
+    try {
+      triggers = (await this.communityModel.findOne({ chatId: chatId }, { triggers: 1 }))?.triggers;
+    } catch (error) {
+      this.logger.log(error);
+    }
+
+    if (!triggers) {
+      throw new Error('No triggers recieved');
+    }
+
     try {
       // right now only add points to owner of the link
       communityUser = await this.communityUserModel.findOneAndUpdate(
         { userId: update.chatMember.new_chat_member.user.id, chatId: chatId },
         {
-          $inc: { points: 50 },
+          $inc: { points: triggers.referral.inviterPoints },
           communityName: title,
           isAdmin: admins.some((owner) => owner.user.id === update.chatMember.new_chat_member.user.id),
         },
@@ -128,7 +140,7 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
           data: new ReferralJoinData(
             update.chatMember.new_chat_member.user.id,
             update.chatMember.chat.id,
-            50,
+            triggers.referral.inviterPoints,
             update.chatMember.new_chat_member.user.username || String(update.chatMember.new_chat_member.user.id),
           ),
         });
