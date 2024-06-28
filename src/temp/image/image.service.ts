@@ -17,7 +17,7 @@ export class TempImageService {
     @InjectModel(TempImage.name) private readonly tempImageModel: Model<TempImage>,
     configService: ConfigService,
   ) {
-    this.serverOrigin = configService.getOrThrow('SERVER_ORIGIN');
+    this.serverOrigin = configService.getOrThrow('SERVER_ORIGIN').replace(/\/$/, '');
   }
 
   async createTempImage(mimetype: string, image: Buffer): Promise<CreatedTempImageDto> {
@@ -40,6 +40,6 @@ export class TempImageService {
     const imageFilename = `${imageName}.${tempImage.extension}`;
     this.logger.log(`Found temp image by id ${imageId}. Saving image ${imageFilename}`);
     writeFileSync(join(PUBLIC_FS_IMAGE_DIRECTORY, imageFilename), tempImage.data);
-    return join(this.serverOrigin, PUBLIC_IMAGE_ENDPOINT, imageFilename);
+    return this.serverOrigin + join(PUBLIC_IMAGE_ENDPOINT, imageFilename);
   }
 }
