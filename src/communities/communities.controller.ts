@@ -3,6 +3,7 @@ import { CommunityService } from './communities.service';
 import { TmaService } from 'src/tma/tma.service';
 import { CommunityUser } from 'src/data/communityUser.entity';
 import { CommunityUserService } from './communityUser.service';
+import { CommunityDto } from './dto/CommunityDto';
 
 @Controller('communities')
 export class CommunitiesController {
@@ -14,14 +15,14 @@ export class CommunitiesController {
     private readonly communityUserService: CommunityUserService,
   ) {}
 
-  @Get('admin')
+  @Get('admin-user')
   getAdminCommunities(@Headers('tmaInitData') tmaInitData: string): Promise<Array<CommunityUser>> {
     this.logger.log('getAdminCommunities', JSON.stringify(tmaInitData));
 
     return this.communityUserService.getAdminCommunities(this.tmaService.getUserId(tmaInitData));
   }
 
-  @Get('all')
+  @Get('user')
   getAllCommunities(@Headers('tmaInitData') tmaInitData: string) {
     this.logger.log('getAllCommunities', JSON.stringify(tmaInitData));
 
@@ -34,7 +35,7 @@ export class CommunitiesController {
     }
   }
 
-  @Get(':chatId')
+  @Get(':chatId/user')
   async getUserCommunity(
     @Headers('tmaInitData') tmaInitData: string,
     @Param('chatId') chatId: number,
@@ -52,5 +53,15 @@ export class CommunitiesController {
     }
 
     return userCommunity;
+  }
+
+  @Get(':chatId')
+  async getCommunity(
+    @Headers('tmaInitData') tmaInitData: string,
+    @Param('chatId') chatId: number,
+  ): Promise<CommunityDto> {
+    const userId = this.tmaService.getUserId(tmaInitData);
+    this.communityUserService.validateCommunityUserPresent(userId, chatId);
+    return this.communitiesService.getCommunity(chatId);
   }
 }

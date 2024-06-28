@@ -1,9 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Community } from 'src/data/community.entity';
 import { CommunityUser } from 'src/data/communityUser.entity';
 import { Message } from 'src/data/message.entity';
+import { CommunityDto } from './dto/CommunityDto';
 
 @Injectable()
 export class CommunityService {
@@ -41,5 +42,13 @@ export class CommunityService {
 
   async increaseReactionCounter(chatId: number) {
     await this.communityModel.updateOne({ chatId: chatId }, { $inc: { reactions: 1 } });
+  }
+
+  async getCommunity(chatId: number): Promise<CommunityDto> {
+    const result = await this.communityModel.findOne({ chatId: chatId });
+    if (!result) {
+      throw new NotFoundException(`Unable to find community with id ${chatId}`);
+    }
+    return new CommunityDto(result);
   }
 }
