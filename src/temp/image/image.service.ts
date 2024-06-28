@@ -1,12 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
+import { writeFileSync } from 'fs';
 import { Model, Types } from 'mongoose';
+import { join } from 'path';
+import { PUBLIC_FS_IMAGE_DIRECTORY, PUBLIC_IMAGE_ENDPOINT } from 'src/app.module';
 import { EXPIRE_AFTER_SECONDS, TempImage } from 'src/data/tempImage.entity';
 import { CreatedTempImageDto } from './dto/CreatedTempImageDto';
-import { writeFileSync } from 'fs';
-import { join } from 'path';
-import { PUBLIC_ENDPOINT, PUBLIC_FS_DIRECTORY } from 'src/app.module';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class TempImageService {
@@ -20,8 +20,14 @@ export class TempImageService {
     this.serverOrigin = configService.getOrThrow('SERVER_ORIGIN');
   }
 
-  async createTempImage(image: Buffer): Promise<CreatedTempImageDto> {
-    const response = await this.tempImageModel.create({ data: image });
+  async createTempImage(mimetype: string, image: Buffer): Promise<CreatedTempImageDto> {
+    const mathResult = mimetype.match(/image\/([a-z]+)/);
+    if (!mathResult) {
+      throw new BadRequestException('Unrecognized image mimetype');
+    }
+    const fileExtension = mathResult[1];
+    this.logger.log(`Creating temp image with extension ${fileExtension}`);
+    const response = await this.tempImageModel.create({ extension: fileExtension, data: image });
     const expiresAt = new Date(response.createdAt.getTime() + EXPIRE_AFTER_SECONDS * 1000);
     return { id: response._id.toHexString(), expiresAt: expiresAt };
   }
@@ -31,8 +37,9 @@ export class TempImageService {
     if (!tempImage) {
       throw new Error(`Unable to find image by id ${imageId}`);
     }
-    this.logger.log(`Found temp image by id ${imageId}`);
-    writeFileSync(join(PUBLIC_FS_DIRECTORY, imageName), tempImage.data);
-    return join(this.serverOrigin, PUBLIC_ENDPOINT, imageName);
+    const imageFilename = `${imageName}.${tempImage.extension}`;
+    this.logger.log(`Found temp image by id ${imageId}. Saving image ${imageFilename}`);
+    writeFileSync(join(PUBLIC_FS_IMAGE_DIRECTORY, imageFilename), tempImage.data);
+    return join(this.serverOrigin, PUBLIC_IMAGE_ENDPOINT, imageFilename);
   }
 }

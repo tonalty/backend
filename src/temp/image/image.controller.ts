@@ -1,6 +1,5 @@
 import {
   Controller,
-  ExecutionContext,
   Headers,
   HttpStatus,
   Logger,
@@ -8,7 +7,6 @@ import {
   Post,
   UploadedFile,
   UseInterceptors,
-  createParamDecorator,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
@@ -17,12 +15,6 @@ import { CreateTempImageDto } from './dto/CreateTempImageDto';
 import { TempImageService } from './image.service';
 
 const MAX_IMAGE_SIZE_IN_BYTES = 10 * 1024 * 1024;
-
-export const FileBuffer = createParamDecorator((data: unknown, ctx: ExecutionContext) => {
-  const request = ctx.switchToHttp().getRequest();
-
-  return request.fileBuffer || null;
-});
 
 @Controller('image')
 export class TempImageController {
@@ -47,6 +39,6 @@ export class TempImageController {
     data: Express.Multer.File,
   ) {
     this.tmaService.validateInitData(tmaInitData);
-    return this.tempImageService.createTempImage(data.buffer);
+    return this.tempImageService.createTempImage(data.mimetype, data.buffer);
   }
 }
