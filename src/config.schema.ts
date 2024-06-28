@@ -5,7 +5,9 @@ export const configValidationSchema = Joi.object({
   PORT: Joi.number().default(3000).required(),
   DB_URL: Joi.string().required(),
   BOT_TOKEN: Joi.string().required(),
-  THRESHOLD_FOR_POINTS: Joi.number().default(1).required(),
   AUTH_DATE_SEC_TIMEOUT: Joi.number().default(1800).required(),
   MNEMONIC: Joi.string().required(),
+  WEB_APP_NAME: Joi.string().required(),
+  BOT_NAME: Joi.string().required(),
+  SERVER_ORIGIN: Joi.string().required(),
 });

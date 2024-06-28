@@ -70,7 +70,7 @@ export class ReferralsService {
         },
       } = inviteLinkResponse;
 
-      const params = { ownerId: userId, title, name, telegramInviteLink };
+      const params = { ownerId: userId, title, name, telegramInviteLink, chatId };
       const link = this.createReferralLink(params);
 
       try {
