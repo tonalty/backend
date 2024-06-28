@@ -10,6 +10,7 @@ import { CommunityUser } from 'src/data/communityUser.entity';
 import { Model } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
 import { Input } from 'telegraf';
+import { PUBLIC_FS_DIRECTORY } from 'src/app.module';
 
 @Injectable()
 export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
@@ -63,7 +64,9 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
       await update.sendMessage(`https://t.me/${this.botName}/${this.webAppName}`);
 
       try {
-        await update.sendPhoto(Input.fromLocalFile('src/icons/BotStart.png'), {
+        this.logger.log('Sending photo from', PUBLIC_FS_DIRECTORY);
+
+        await update.sendPhoto(Input.fromLocalFile(`${PUBLIC_FS_DIRECTORY}/BotStart.png`), {
           caption: `Tonality is a point reward system that adds value to customer brand interactions.\n\n• Encourage targeted actions\n\n• No technical expertise required, manage via Telegram bot\n\n• Explore new ways to engage`,
           reply_markup: {
             inline_keyboard: [
@@ -77,6 +80,8 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
           },
         });
       } catch (error) {
+        this.logger.log('Failed to send photo', error);
+
         this.logger.error(error);
       }
     }
