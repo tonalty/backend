@@ -18,7 +18,7 @@ import { join } from 'path';
 
 export const PUBLIC_FS_DIRECTORY = join(__dirname, '..', 'public');
 export const PUBLIC_FS_IMAGE_DIRECTORY = join(PUBLIC_FS_DIRECTORY, 'image');
-export const PUBLIC_ENDPOINT = '/public/';
+export const PUBLIC_ENDPOINT = '/backend/public/';
 export const PUBLIC_IMAGE_ENDPOINT = join(PUBLIC_ENDPOINT, 'image');
 
 @Module({

@@ -33,10 +33,7 @@ async function bootstrap() {
     }),
   );
 
-  if (process.env.STAGE === 'prod') {
-    app.setGlobalPrefix('backend');
-  }
-
+  app.setGlobalPrefix('backend');
   const config = new DocumentBuilder().setTitle('Tonalty API').setVersion('1.0').build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
