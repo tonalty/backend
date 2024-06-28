@@ -13,7 +13,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Community } from 'src/data/community.entity';
 import { Model } from 'mongoose';
 import { TokenMetadata } from 'src/data/tokenMetadata.entity';
-import { CommunitiesService } from 'src/communities/communities.service';
+import { CommunityService } from 'src/communities/communities.service';
 
 @Injectable()
 export class TokensService implements OnModuleInit {
@@ -24,7 +24,7 @@ export class TokensService implements OnModuleInit {
   constructor(
     configService: ConfigService,
     @InjectModel(Community.name) private readonly communityModel: Model<Community>,
-    private readonly communitiesService: CommunitiesService,
+    private readonly communitiesService: CommunityService,
   ) {
     this.mnemonic = configService.getOrThrow('MNEMONIC');
   }

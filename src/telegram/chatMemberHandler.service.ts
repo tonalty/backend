@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Referral } from 'src/data/referral.entity';
+import { CommunityUserService } from 'src/communities/communityUser.service';
+import { Community } from 'src/data/community.entity';
 import { CommunityUser } from 'src/data/communityUser.entity';
+import { CommunityUserHistory, ReferralJoinData } from 'src/data/communityUserHistory.entity';
+import { Referral } from 'src/data/referral.entity';
 import { Context, NarrowedContext } from 'telegraf';
 import { Chat, Update } from 'telegraf/typings/core/types/typegram';
-import { Community } from 'src/data/community.entity';
 import { AbstractChatMemberHandler } from './abstractChatMemberHandler.service';
-import { DeleteResult } from 'mongodb';
-import { CommunityUserHistory, ReferralJoinData } from 'src/data/communityUserHistory.entity';
+import { CommunityService } from 'src/communities/communities.service';
 
 @Injectable()
 export class ChatMemberHandlerService extends AbstractChatMemberHandler {
@@ -17,12 +18,10 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
     @InjectModel(CommunityUser.name) protected communityUserModel: Model<CommunityUser>,
     @InjectModel(Community.name) protected communityModel: Model<Community>,
     @InjectModel(CommunityUserHistory.name) protected communityUserHistoryModel: Model<CommunityUserHistory>,
+    private readonly communityUserService: CommunityUserService,
+    communityService: CommunityService,
   ) {
-    super(communityModel, communityUserModel);
-  }
-
-  private async deleteCommunityUser(chatId: number, userId: number): Promise<DeleteResult> {
-    return await this.communityUserModel.deleteOne({ chatId, userId });
+    super(communityModel, communityUserModel, communityService);
   }
 
   async handle(update: NarrowedContext<Context<Update>, Update.ChatMemberUpdate>) {
@@ -35,7 +34,10 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
     }
 
     if (update.chatMember.new_chat_member.status === 'left') {
-      return await this.deleteCommunityUser(update.chatMember.chat.id, update.chatMember.new_chat_member.user.id);
+      return await this.communityUserService.deleteCommunityUser(
+        update.chatMember.chat.id,
+        update.chatMember.new_chat_member.user.id,
+      );
     }
 
     const inviteLink = update.chatMember.invite_link?.invite_link;

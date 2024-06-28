@@ -1,10 +1,10 @@
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { CommunityService } from 'src/communities/communities.service';
 import { Message } from 'src/data/message.entity';
 import { Context, NarrowedContext } from 'telegraf';
 import { Update } from 'telegraf/typings/core/types/typegram';
-import { Community } from 'src/data/community.entity';
-import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
 export class MessageHandlerService {
@@ -12,7 +12,7 @@ export class MessageHandlerService {
 
   constructor(
     @InjectModel(Message.name) private msgModel: Model<Message>,
-    @InjectModel(Community.name) private communityModel: Model<Community>,
+    private readonly communityService: CommunityService,
   ) {}
 
   async handle(update: NarrowedContext<Context<Update>, Update.MessageUpdate>) {
@@ -51,7 +51,7 @@ Start using our mini-app to be able to earn points and get rewards.`,
       creatorUserName: update.message.from.username,
       creatorFirstName: update.message.from.first_name,
     });
-
+    this.communityService.increaseMessageCounter(update.message.chat.id);
     this.logger.log('Message in DB:', JSON.stringify(message));
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { CommunityService } from 'src/communities/communities.service';
 import { Community, Triggers } from 'src/data/community.entity';
 import { CommunityUser } from 'src/data/communityUser.entity';
 import { ChatMemberAdministrator, ChatMemberOwner } from 'telegraf/typings/core/types/typegram';
@@ -12,6 +13,7 @@ export abstract class AbstractChatMemberHandler {
   constructor(
     @InjectModel(Community.name) protected readonly communityModel: Model<Community>,
     @InjectModel(CommunityUser.name) protected readonly communityUserModel: Model<CommunityUser>,
+    private readonly communityService: CommunityService,
   ) {}
 
   protected async createCommunityIfNotExist(chatId: number, title: string, triggers: Triggers) {
@@ -46,7 +48,7 @@ export abstract class AbstractChatMemberHandler {
     this.logger.log('admins', admins);
 
     try {
-      return await this.communityUserModel.findOneAndUpdate(
+      const result = await this.communityUserModel.findOneAndUpdate(
         { userId, chatId },
         {
           $setOnInsert: {
@@ -59,6 +61,9 @@ export abstract class AbstractChatMemberHandler {
         },
         { upsert: true },
       );
+      if (result) {
+        this.communityService.increaseMemberCounter(chatId);
+      }
     } catch (error) {
       throw new Error(error);
     }
