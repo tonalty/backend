@@ -9,6 +9,7 @@ import { Community, ReactionTrigger, ReferralTrigger, Triggers } from 'src/data/
 import { CommunityUser } from 'src/data/communityUser.entity';
 import { Model } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
+import { Input } from 'telegraf';
 
 @Injectable()
 export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
@@ -60,7 +61,24 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
       await this.createCommunityUserIfNoExist(update.myChatMember.chat.id, update.myChatMember.from.id, title, admins);
 
       await update.sendMessage(`https://t.me/${this.botName}/${this.webAppName}`);
-      // await update.sendMessage(`${this.referralService.createReferralLink({ chatId: update.myChatMember.chat.id })}`);
+
+      try {
+        await update.sendPhoto(Input.fromLocalFile('src/icons/BotStart.png'), {
+          caption: `Tonality is a point reward system that adds value to customer brand interactions.\n\n• Encourage targeted actions\n\n• No technical expertise required, manage via Telegram bot\n\n• Explore new ways to engage`,
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: 'Open reward shop',
+                  url: `${this.referralService.createReferralLink({ chatId: update.myChatMember.chat.id })}`,
+                },
+              ],
+            ],
+          },
+        });
+      } catch (error) {
+        this.logger.error(error);
+      }
     }
 
     if (update.myChatMember.new_chat_member.status === 'left') {
