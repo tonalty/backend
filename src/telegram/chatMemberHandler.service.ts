@@ -142,7 +142,7 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
               chatId: chatId,
             },
             update: {
-              $inc: { points: triggers.referral.inviterPoints },
+              $inc: { points: triggers.referral.inviteePoints },
               communityName: title,
               isAdmin: admins.some((owner) => owner.user.id === update.chatMember.from.id),
             },
@@ -156,7 +156,7 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
 
     this.logger.log('communityUser', communityUser);
 
-    if (communityUser) {
+    if (communityUser.insertedCount || communityUser.upsertedCount) {
       try {
         // TODO: CHECK CHAT HISTORY
         // right now only add points to owner of the link
@@ -166,9 +166,10 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
             communityId: chatId,
             data: new ReferralJoinData(
               referral.ownerId,
-              update.chatMember.chat.id,
+              referral.chatId,
               triggers.referral.inviterPoints,
-              update.chatMember.new_chat_member.user.username || String(referral.ownerId),
+              update.chatMember.from.username || update.chatMember.from.first_name || String(update.chatMember.from.id),
+              true,
             ),
           },
           {
@@ -177,8 +178,10 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
             data: new ReferralJoinData(
               update.chatMember.from.id,
               update.chatMember.chat.id,
-              triggers.referral.inviterPoints,
-              update.chatMember.from.username || String(update.chatMember.from.id),
+              triggers.referral.inviteePoints,
+              // right now we do not need this field but maybe later will need to change it
+              update.chatMember.from.username || update.chatMember.from.first_name || String(update.chatMember.from.id),
+              false,
             ),
           },
         ]);

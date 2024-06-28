@@ -53,25 +53,5 @@ Start using our mini-app to be able to earn points and get rewards.`,
     });
 
     this.logger.log('Message in DB:', JSON.stringify(message));
-
-    const admins = await update.getChatAdministrators();
-
-    await this.communityModel.updateOne(
-      { chatId: update.chat.id },
-      {
-        $setOnInsert: {
-          chatId: update.chat.id,
-        },
-
-        title: update.chat.title,
-        adminUserIds: admins.map((x) => x.user.id),
-
-        // deduplicate
-        // $push: {
-        // userIds: update.update.message.from.id,
-        // },
-      },
-      { upsert: true }, // create a new document if no documents match the filter
-    );
   }
 }

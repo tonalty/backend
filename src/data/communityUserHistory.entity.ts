@@ -40,6 +40,7 @@ export class ReferralJoinData implements HistoryDataType {
     public readonly chatId: number,
     public readonly points: number,
     public readonly username: string,
+    public readonly isOwner: boolean,
   ) {}
 }
 
