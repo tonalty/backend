@@ -9,7 +9,7 @@ import { Referral } from 'src/data/referral.entity';
 import { Context, NarrowedContext } from 'telegraf';
 import { Chat, Update } from 'telegraf/typings/core/types/typegram';
 import { AbstractChatMemberHandler } from './abstractChatMemberHandler.service';
-import { CommunityService } from 'src/communities/communities.service';
+import { CommunityService } from 'src/communities/community.service';
 
 @Injectable()
 export class ChatMemberHandlerService extends AbstractChatMemberHandler {

@@ -11,7 +11,7 @@ import { Model } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
 import { Input } from 'telegraf';
 import { PUBLIC_FS_DIRECTORY } from 'src/app.module';
-import { CommunityService } from 'src/communities/communities.service';
+import { CommunityService } from 'src/communities/community.service';
 
 @Injectable()
 export class MyChatMemberHandlerService extends AbstractChatMemberHandler {

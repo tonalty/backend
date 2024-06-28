@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { CommunityService } from 'src/communities/communities.service';
+import { CommunityService } from 'src/communities/community.service';
 import { Reward } from 'src/data/reward.entity';
 import { HistoryService } from 'src/history/history.service';
 import { TempImageService } from 'src/temp/image/image.service';

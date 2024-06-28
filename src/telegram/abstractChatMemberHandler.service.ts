@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { CommunityService } from 'src/communities/communities.service';
+import { CommunityService } from 'src/communities/community.service';
 import { Community, Triggers } from 'src/data/community.entity';
 import { CommunityUser } from 'src/data/communityUser.entity';
 import { ChatMemberAdministrator, ChatMemberOwner } from 'telegraf/typings/core/types/typegram';

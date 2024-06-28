@@ -8,7 +8,7 @@ import { CommunityUser } from 'src/data/communityUser.entity';
 import { MessageReactionData, CommunityUserHistory } from 'src/data/communityUserHistory.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import { Community } from 'src/data/community.entity';
-import { CommunityService } from 'src/communities/communities.service';
+import { CommunityService } from 'src/communities/community.service';
 
 @Injectable()
 export class ReactionHandlerService {

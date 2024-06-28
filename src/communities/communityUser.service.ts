@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { DeleteResult } from 'mongodb';
 import { Model } from 'mongoose';
 import { CommunityUser } from 'src/data/communityUser.entity';
-import { CommunityService } from './communities.service';
+import { CommunityService } from './community.service';
 
 @Injectable()
 export class CommunityUserService {

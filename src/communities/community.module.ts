@@ -1,11 +1,11 @@
 import { Global, Module } from '@nestjs/common';
-import { CommunitiesController } from './communities.controller';
-import { CommunityService } from './communities.service';
+import { CommunityController } from './community.controller';
+import { CommunityService } from './community.service';
 import { CommunityUserService } from './communityUser.service';
 
 @Global()
 @Module({
-  controllers: [CommunitiesController],
+  controllers: [CommunityController],
   providers: [CommunityService, CommunityUserService],
   exports: [CommunityService, CommunityUserService],
 })

@@ -1,13 +1,13 @@
 import { Controller, Get, Headers, Logger, Param } from '@nestjs/common';
-import { CommunityService } from './communities.service';
+import { CommunityService } from './community.service';
 import { TmaService } from 'src/tma/tma.service';
 import { CommunityUser } from 'src/data/communityUser.entity';
 import { CommunityUserService } from './communityUser.service';
 import { CommunityDto } from './dto/CommunityDto';
 
-@Controller('communities')
-export class CommunitiesController {
-  private readonly logger = new Logger(CommunitiesController.name);
+@Controller('community')
+export class CommunityController {
+  private readonly logger = new Logger(CommunityController.name);
 
   constructor(
     private readonly tmaService: TmaService,

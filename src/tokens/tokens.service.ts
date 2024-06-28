@@ -13,7 +13,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Community } from 'src/data/community.entity';
 import { Model } from 'mongoose';
 import { TokenMetadata } from 'src/data/tokenMetadata.entity';
-import { CommunityService } from 'src/communities/communities.service';
+import { CommunityService } from 'src/communities/community.service';
 
 @Injectable()
 export class TokensService implements OnModuleInit {
