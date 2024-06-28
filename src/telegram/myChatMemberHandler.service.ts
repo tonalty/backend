@@ -39,6 +39,7 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
 
   async handle(update: NarrowedContext<Context<Update>, Update.MyChatMemberUpdate>) {
     this.logger.log('update.myChatMember.new_chat_member', update.myChatMember.new_chat_member);
+    this.logger.log('update.myChatMember.new_chat_member.status', update.myChatMember.new_chat_member.status);
 
     // TODO: check this when we change settings of the chat from private to public
     if (update.myChatMember.chat.type === 'supergroup' || update.myChatMember.chat.type === 'private') {
