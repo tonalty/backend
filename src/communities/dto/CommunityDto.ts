@@ -12,8 +12,10 @@ export class CommunityDto {
 
   constructor(community: Community) {
     this.title = community.title;
-    this.triggers.referral = community.triggers.referral;
-    this.triggers.reaction = community.triggers.reaction;
+    if (this.triggers) {
+      this.triggers.referral = community.triggers.referral;
+      this.triggers.reaction = community.triggers.reaction;
+    }
     this.members = community.members;
     this.comments = community.comments;
     this.reactions = community.reactions;
