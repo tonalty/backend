@@ -60,7 +60,7 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
         referral: new ReferralTrigger(0, 0, false),
       };
 
-      await this.createCommunityIfNotExist(update.myChatMember.chat.id, title, triggers);
+      await this.communityService.createCommunityIfNotExist(update.myChatMember.chat.id, title, triggers);
 
       await this.createCommunityUserIfNoExist(update.myChatMember.chat.id, update.myChatMember.from.id, title, admins);
 

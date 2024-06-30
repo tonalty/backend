@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Community } from 'src/data/community.entity';
+import { Community, Triggers } from 'src/data/community.entity';
 import { CommunityUser } from 'src/data/communityUser.entity';
 import { Message } from 'src/data/message.entity';
 import { CommunityDto } from './dto/CommunityDto';
@@ -50,5 +50,27 @@ export class CommunityService {
       throw new NotFoundException(`Unable to find community with id ${chatId}`);
     }
     return new CommunityDto(result);
+  }
+
+  async createCommunityIfNotExist(chatId: number, title: string, triggers: Triggers) {
+    try {
+      // create
+      return await this.communityModel.updateOne(
+        { chatId: chatId },
+        {
+          $setOnInsert: {
+            chatId: chatId,
+            title: title ?? `private-${chatId}`,
+            triggers,
+            members: 0,
+            comments: 0,
+            reactions: 0,
+          },
+        },
+        { upsert: true }, // create a new document if no documents match the filter
+      );
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 }

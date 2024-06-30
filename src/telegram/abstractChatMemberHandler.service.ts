@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CommunityService } from 'src/communities/community.service';
-import { Community, Triggers } from 'src/data/community.entity';
+import { Community } from 'src/data/community.entity';
 import { CommunityUser } from 'src/data/communityUser.entity';
 import { ChatMemberAdministrator, ChatMemberOwner } from 'telegraf/typings/core/types/typegram';
 
@@ -13,27 +13,8 @@ export abstract class AbstractChatMemberHandler {
   constructor(
     @InjectModel(Community.name) protected readonly communityModel: Model<Community>,
     @InjectModel(CommunityUser.name) protected readonly communityUserModel: Model<CommunityUser>,
-    private readonly communityService: CommunityService,
+    protected readonly communityService: CommunityService,
   ) {}
-
-  protected async createCommunityIfNotExist(chatId: number, title: string, triggers: Triggers) {
-    try {
-      // create
-      return await this.communityModel.updateOne(
-        { chatId: chatId },
-        {
-          $setOnInsert: {
-            chatId: chatId,
-            title: title ?? `private-${chatId}`,
-            triggers,
-          },
-        },
-        { upsert: true }, // create a new document if no documents match the filter
-      );
-    } catch (error) {
-      throw new Error(error);
-    }
-  }
 
   protected async createCommunityUserIfNoExist(
     chatId: number,
