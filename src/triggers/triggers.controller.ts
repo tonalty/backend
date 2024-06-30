@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Patch, Headers, Logger } from '@nestjs/co
 import { TriggersService } from './triggers.service';
 import { TmaService } from 'src/tma/tma.service';
 import { Triggers } from 'src/data/community.entity';
-import { TriggersDto } from './dto/triggersDto';
+import { UpdateTriggersDto } from './dto/UpdateTriggersDto';
 
 @Controller('triggers')
 export class TriggersController {
@@ -25,8 +25,11 @@ export class TriggersController {
   }
 
   @Patch('community')
-  updateTriggers(@Headers('tmaInitData') tmaInitData: string, @Body() triggersDto: TriggersDto): Promise<boolean> {
-    this.logger.log('triggersDto', triggersDto);
+  updateTriggers(
+    @Headers('tmaInitData') tmaInitData: string,
+    @Body() updateTriggersDto: UpdateTriggersDto,
+  ): Promise<boolean> {
+    this.logger.log('updateTriggersDto', updateTriggersDto);
 
     try {
       this.tmaService.getUserId(tmaInitData);
@@ -34,6 +37,6 @@ export class TriggersController {
       throw new Error(error);
     }
 
-    return this.triggersService.updateTriggers(triggersDto);
+    return this.triggersService.updateTriggers(updateTriggersDto);
   }
 }

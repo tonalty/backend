@@ -1,7 +1,7 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Community, Triggers } from 'src/data/community.entity';
-import { TriggersDto } from './dto/triggersDto';
+import { UpdateTriggersDto } from './dto/UpdateTriggersDto';
 import { Logger } from '@nestjs/common';
 
 export class TriggersService {
@@ -23,20 +23,20 @@ export class TriggersService {
     }
   }
 
-  async updateTriggers(triggersDto: TriggersDto): Promise<boolean> {
+  async updateTriggers(updateTriggersDto: UpdateTriggersDto): Promise<boolean> {
     try {
-      this.logger.log('updateTriggers triggersDto: ', JSON.stringify(triggersDto));
+      this.logger.log('updateTriggers updateTriggersDto: ', JSON.stringify(updateTriggersDto));
       const {
         triggers: { referral, reaction },
-      } = triggersDto;
+      } = updateTriggersDto;
 
       this.logger.log('referral', referral);
       this.logger.log('reaction', reaction);
 
       const result = await this.communityModel.updateOne(
-        { chatId: triggersDto.chatId },
+        { chatId: updateTriggersDto.chatId },
         {
-          chatId: triggersDto.chatId,
+          chatId: updateTriggersDto.chatId,
           triggers: { referral, reaction },
         },
         { new: true },
