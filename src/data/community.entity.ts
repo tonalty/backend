@@ -18,18 +18,18 @@ export class ReferralTrigger {
   ) {}
 }
 
-interface IReactionTrigger {
+export interface IReactionTrigger {
   readonly points: number;
   readonly threshold: number;
   readonly isEnabled: boolean;
 }
-interface IReferralTrigger {
+export interface IReferralTrigger {
   readonly inviterPoints: number;
   readonly inviteePoints: number;
   readonly isEnabled: boolean;
 }
 
-export interface Triggers {
+export interface ITriggers {
   referral: IReferralTrigger;
   reaction: IReactionTrigger;
 }
