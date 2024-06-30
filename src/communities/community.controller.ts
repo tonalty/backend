@@ -1,9 +1,11 @@
-import { Controller, Get, Headers, Logger, Param } from '@nestjs/common';
+import { Controller, Get, Headers, Logger, NotFoundException, Param } from '@nestjs/common';
 import { CommunityService } from './community.service';
 import { TmaService } from 'src/tma/tma.service';
 import { CommunityUser } from 'src/data/communityUser.entity';
 import { CommunityUserService } from './communityUser.service';
 import { CommunityDto } from './dto/CommunityDto';
+import { TelegramService } from 'src/telegram/telegram.service';
+import { CommunityUserDto } from './dto/CommunityUserDto';
 
 @Controller('community')
 export class CommunityController {
@@ -13,6 +15,7 @@ export class CommunityController {
     private readonly tmaService: TmaService,
     private readonly communitiesService: CommunityService,
     private readonly communityUserService: CommunityUserService,
+    private readonly telegramService: TelegramService,
   ) {}
 
   @Get('admin-user')
@@ -39,20 +42,14 @@ export class CommunityController {
   async getUserCommunity(
     @Headers('tmaInitData') tmaInitData: string,
     @Param('chatId') chatId: number,
-  ): Promise<CommunityUser | undefined> {
-    const allCommunities = await this.getAllCommunities(tmaInitData);
-
-    if (!allCommunities) {
-      throw new Error('No communities');
+  ): Promise<CommunityUserDto> {
+    const userId = this.tmaService.getUserId(tmaInitData);
+    const chatMember = await this.telegramService.getChatMember(userId, chatId);
+    if (!chatMember) {
+      throw new NotFoundException('Not found user in community');
     }
-
-    const userCommunity = allCommunities.find((userCommunity) => userCommunity.chatId === chatId);
-
-    if (!userCommunity) {
-      throw new Error(`No such chat id ${chatId}`);
-    }
-
-    return userCommunity;
+    const isAdmin = this.communityUserService.isChatMemberAdmin(chatMember);
+    return this.communityUserService.createOrUpdateCommunityUser(userId, chatId, isAdmin);
   }
 
   @Get(':chatId')

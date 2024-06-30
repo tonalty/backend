@@ -29,8 +29,8 @@ export abstract class AbstractChatMemberHandler {
     this.logger.log('admins', admins);
 
     try {
-      const result = await this.communityUserModel.findOneAndUpdate(
-        { userId, chatId },
+      const result = await this.communityUserModel.updateOne(
+        { userId: userId, chatId: chatId },
         {
           $setOnInsert: {
             userId: userId,
@@ -42,7 +42,8 @@ export abstract class AbstractChatMemberHandler {
         },
         { upsert: true },
       );
-      if (result) {
+      if (result.upsertedCount) {
+        this.logger.log(`Adding new comunity user with id ${userId} and chatId ${chatId}`);
         this.communityService.increaseMemberCounter(chatId);
       }
     } catch (error) {

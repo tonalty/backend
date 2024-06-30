@@ -52,6 +52,14 @@ export class CommunityService {
     return new CommunityDto(result);
   }
 
+  async getCommunityTitle(chatId: number): Promise<string> {
+    const result = await this.communityModel.findOne({ chatId: chatId }, { title: 1 });
+    if (!result) {
+      throw new NotFoundException(`Unable to find community with id ${chatId}`);
+    }
+    return result.title;
+  }
+
   async createCommunityIfNotExist(chatId: number, title: string, triggers: Triggers, chatMemberCount: number) {
     try {
       // create

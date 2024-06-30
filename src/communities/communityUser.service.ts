@@ -4,6 +4,8 @@ import { DeleteResult } from 'mongodb';
 import { Model } from 'mongoose';
 import { CommunityUser } from 'src/data/communityUser.entity';
 import { CommunityService } from './community.service';
+import { CommunityUserDto } from './dto/CommunityUserDto';
+import { ChatMember } from 'telegraf/typings/core/types/typegram';
 
 @Injectable()
 export class CommunityUserService {
@@ -22,21 +24,20 @@ export class CommunityUserService {
     return this.communityUserModel.find({ userId: userId }).sort({ points: -1, _id: 1 });
   }
 
-  async getCommunityUser(userId: number, chatId: number): Promise<CommunityUser> {
-    const communityUser = await this.communityUserModel.findOne({ userId: userId, chatId: chatId });
-    if (!communityUser) {
-      throw new Error(`User with id ${userId} does not exist in community ${chatId}`);
-    }
-    return communityUser;
+  getCommunityUser(userId: number, chatId: number): Promise<CommunityUser | null> {
+    return this.communityUserModel.findOne({ userId: userId, chatId: chatId });
   }
 
   async validateCommunityUserPresent(userId: number, chatId: number) {
-    await this.getCommunityUser(userId, chatId);
+    const communityUser = await this.getCommunityUser(userId, chatId);
+    if (!communityUser) {
+      throw new Error(`User with id ${userId} does not exist in community ${chatId}`);
+    }
   }
 
   async validateUserIsAdmin(userId: number, chatId: number) {
     const communityUser = await this.getCommunityUser(userId, chatId);
-    if (!communityUser.isAdmin) {
+    if (communityUser && !communityUser.isAdmin) {
       throw new Error(`User with id ${userId} is not admin`);
     }
   }
@@ -66,5 +67,47 @@ export class CommunityUserService {
     const result = await this.communityUserModel.deleteOne({ chatId, userId });
     this.communityService.decreaseMemberCounter(chatId);
     return result;
+  }
+
+  async createCommunityUser(userId: number, chatId: number, isAdmin: boolean): Promise<CommunityUserDto> {
+    const communityTitle = await this.communityService.getCommunityTitle(chatId);
+    const result = await this.communityUserModel.create({
+      userId: userId,
+      chatId: chatId,
+      communityName: communityTitle,
+      points: 0,
+      isAdmin: isAdmin,
+    });
+    this.logger.log(`Created a new community user. userId: ${userId}, chatId ${chatId}`);
+    return new CommunityUserDto(result);
+  }
+
+  async createOrUpdateCommunityUser(userId: number, chatId: number, isAdmin: boolean): Promise<CommunityUserDto> {
+    const communityTitle = await this.communityService.getCommunityTitle(chatId);
+    const result = await this.communityUserModel.findOneAndUpdate(
+      { userId: userId, chatId: chatId },
+      {
+        $setOnInsert: {
+          userId: userId,
+          chatId: chatId,
+          communityName: communityTitle,
+          points: 0,
+        },
+        $set: {
+          // $set happens if the document is found and if it's not found
+          isAdmin: isAdmin,
+        },
+      },
+      {
+        upsert: true,
+        new: true,
+      },
+    );
+    this.logger.log(`Created a new community user. userId: ${userId}, chatId ${chatId}`);
+    return new CommunityUserDto(result);
+  }
+
+  isChatMemberAdmin(chatMember: ChatMember): boolean {
+    return chatMember.status == 'creator' || chatMember.status == 'administrator';
   }
 }

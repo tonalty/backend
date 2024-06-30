@@ -1,21 +1,19 @@
-import { ConfigService } from '@nestjs/config';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { CommunityService } from 'src/communities/community.service';
+import { Community } from 'src/data/community.entity';
+import { CommunityUser } from 'src/data/communityUser.entity';
+import { CommunityUserHistory, MessageReactionData } from 'src/data/communityUserHistory.entity';
 import { Message } from 'src/data/message.entity';
 import { MessageReactionUpdated } from 'telegraf/typings/core/types/typegram';
 import { inspect } from 'util';
-import { CommunityUser } from 'src/data/communityUser.entity';
-import { MessageReactionData, CommunityUserHistory } from 'src/data/communityUserHistory.entity';
-import { Injectable, Logger } from '@nestjs/common';
-import { Community } from 'src/data/community.entity';
-import { CommunityService } from 'src/communities/community.service';
 
 @Injectable()
 export class ReactionHandlerService {
   private readonly logger = new Logger(ReactionHandlerService.name);
 
   constructor(
-    private configService: ConfigService,
     @InjectModel(Message.name) private messageModel: Model<Message>,
     @InjectModel(Community.name) private communityModel: Model<Community>,
     @InjectModel(CommunityUser.name) private communityUserModel: Model<CommunityUser>,
