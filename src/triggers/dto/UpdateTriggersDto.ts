@@ -48,13 +48,3 @@ export class UpdateTriggersDto {
   @Type(() => Triggers)
   triggers: Triggers;
 }
-
-// import { ReactionTrigger, ReferralTrigger } from 'src/data/community.entity';
-
-// export interface UpdateTriggersDto {
-//   chatId: number;
-//   triggers: {
-//     referral: ReferralTrigger;
-//     reaction: ReactionTrigger;
-//   };
-// }
