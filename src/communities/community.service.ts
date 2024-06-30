@@ -60,7 +60,7 @@ export class CommunityService {
     return result.title;
   }
 
-  async createCommunityIfNotExist(chatId: number, title: string, triggers: Triggers, chatMemberCount: number) {
+  async createOrUpdateCommunity(chatId: number, title: string, triggers: Triggers, chatMemberCount: number) {
     try {
       // create
       return await this.communityModel.updateOne(
@@ -70,9 +70,11 @@ export class CommunityService {
             chatId: chatId,
             title: title ?? `private-${chatId}`,
             triggers,
-            members: chatMemberCount,
             comments: 0,
             reactions: 0,
+          },
+          $set: {
+            members: chatMemberCount,
           },
         },
         { upsert: true }, // create a new document if no documents match the filter

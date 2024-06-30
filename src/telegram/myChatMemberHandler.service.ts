@@ -62,7 +62,7 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
 
       const chatMemberCount = await this.getChatMembersCount(update);
 
-      await this.communityService.createCommunityIfNotExist(
+      await this.communityService.createOrUpdateCommunity(
         update.myChatMember.chat.id,
         title,
         triggers,

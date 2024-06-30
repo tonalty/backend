@@ -44,7 +44,6 @@ export abstract class AbstractChatMemberHandler {
       );
       if (result.upsertedCount) {
         this.logger.log(`Adding new comunity user with id ${userId} and chatId ${chatId}`);
-        this.communityService.increaseMemberCounter(chatId);
       }
     } catch (error) {
       throw new Error(error);

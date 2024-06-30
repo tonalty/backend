@@ -152,6 +152,7 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
           },
         },
       ]);
+      this.communityService.increaseMemberCounter(chatId);
     } catch (error) {
       throw new Error(`Error while increasing points ${error}`);
     }
