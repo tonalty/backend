@@ -16,30 +16,6 @@ export class MessageHandlerService {
   ) {}
 
   async handle(update: NarrowedContext<Context<Update>, Update.MessageUpdate>) {
-    if (update.text === '/rewardShop') {
-      await update.sendPhoto(
-        'https://i0.wp.com/pictures.pibig.info/uploads/posts/2023-04/1680594642_pictures-pibig-info-p-utka-risunok-vkontakte-2.png?ssl=1',
-        //'https://cdn11.bigcommerce.com/s-g5m7dxaevg/images/stencil/1280x1280/products/307/1549/56__64108.1666686998.jpg?c=1',
-        {
-          //caption: `Here is you reward: 20% discount.\nPromo-code: HTSF-AKIR-QNCD`,
-          caption: `This channel uses the loyalty system.There are 215 unclaimed points left.
-Start using our mini-app to be able to earn points and get rewards.`,
-          //caption_entities: [{ offset: 0, length: 4, type: 'url',  }],
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: 'Open reward shop',
-                  url: `https://t.me/ttonalty_bot/tonalty?chatId=${update.chat.id}`,
-                  //web_app: { url: 'https://tonalty.localhost.direct:5173' },
-                },
-              ],
-            ],
-          },
-        },
-      );
-    }
-
     if (update.chat.type === 'private') {
       return;
     }

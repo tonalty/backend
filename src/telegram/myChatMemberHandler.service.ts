@@ -75,7 +75,7 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
             inline_keyboard: [
               [
                 {
-                  text: 'Open reward shop',
+                  text: 'Open your community profile',
                   url: `${this.referralService.createReferralLink({ chatId: update.myChatMember.chat.id })}`,
                 },
               ],
