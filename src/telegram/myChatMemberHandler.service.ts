@@ -60,7 +60,14 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
         referral: new ReferralTrigger(0, 0, false),
       };
 
-      await this.communityService.createCommunityIfNotExist(update.myChatMember.chat.id, title, triggers);
+      const chatMemberCount = await this.getChatMembersCount(update);
+
+      await this.communityService.createCommunityIfNotExist(
+        update.myChatMember.chat.id,
+        title,
+        triggers,
+        chatMemberCount,
+      );
 
       await this.createCommunityUserIfNoExist(update.myChatMember.chat.id, update.myChatMember.from.id, title, admins);
 
@@ -94,5 +101,16 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
       await this.deleteCommunity(update.myChatMember.chat.id);
       await this.deleteCommunityUser(update.myChatMember.chat.id);
     }
+  }
+
+  private async getChatMembersCount(
+    update: NarrowedContext<Context<Update>, Update.MyChatMemberUpdate>,
+  ): Promise<number> {
+    try {
+      return await update.getChatMembersCount();
+    } catch (error) {
+      this.logger.log('Failed to get members count', error);
+    }
+    return 1;
   }
 }

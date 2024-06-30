@@ -52,7 +52,7 @@ export class CommunityService {
     return new CommunityDto(result);
   }
 
-  async createCommunityIfNotExist(chatId: number, title: string, triggers: Triggers) {
+  async createCommunityIfNotExist(chatId: number, title: string, triggers: Triggers, chatMemberCount: number) {
     try {
       // create
       return await this.communityModel.updateOne(
@@ -62,7 +62,7 @@ export class CommunityService {
             chatId: chatId,
             title: title ?? `private-${chatId}`,
             triggers,
-            members: 0,
+            members: chatMemberCount,
             comments: 0,
             reactions: 0,
           },
