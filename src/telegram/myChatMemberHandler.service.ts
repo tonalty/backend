@@ -11,6 +11,7 @@ import { Model } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
 import { Input } from 'telegraf';
 import { PUBLIC_FS_DIRECTORY } from 'src/app.module';
+import { CommunityService } from 'src/communities/community.service';
 
 @Injectable()
 export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
@@ -22,8 +23,9 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
     @InjectModel(Community.name) protected communityModel: Model<Community>,
     private readonly referralService: ReferralsService,
     private readonly configService: ConfigService,
+    communityService: CommunityService,
   ) {
-    super(communityModel, communityUserModel);
+    super(communityModel, communityUserModel, communityService);
 
     this.botName = this.configService.getOrThrow('BOT_NAME');
     this.webAppName = this.configService.getOrThrow('WEB_APP_NAME');

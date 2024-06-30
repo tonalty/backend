@@ -36,7 +36,7 @@ export interface Triggers {
 
 @Schema()
 export class Community {
-  @Prop()
+  @Prop({ required: true, index: true })
   chatId: number;
 
   @Prop()
@@ -60,6 +60,15 @@ export class Community {
     referral: ReferralTrigger;
     reaction: ReactionTrigger;
   };
+
+  @Prop()
+  members: number;
+
+  @Prop()
+  comments: number;
+
+  @Prop()
+  reactions: number;
 }
 
 export interface Triggers {

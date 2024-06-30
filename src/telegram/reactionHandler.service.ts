@@ -8,6 +8,7 @@ import { CommunityUser } from 'src/data/communityUser.entity';
 import { MessageReactionData, CommunityUserHistory } from 'src/data/communityUserHistory.entity';
 import { Injectable, Logger } from '@nestjs/common';
 import { Community } from 'src/data/community.entity';
+import { CommunityService } from 'src/communities/community.service';
 
 @Injectable()
 export class ReactionHandlerService {
@@ -19,6 +20,7 @@ export class ReactionHandlerService {
     @InjectModel(Community.name) private communityModel: Model<Community>,
     @InjectModel(CommunityUser.name) private communityUserModel: Model<CommunityUser>,
     @InjectModel(CommunityUserHistory.name) private communityUserHistoryModel: Model<CommunityUserHistory>,
+    private readonly communityService: CommunityService,
   ) {}
 
   async handle(messageReaction: MessageReactionUpdated) {
@@ -59,7 +61,7 @@ export class ReactionHandlerService {
       );
       return;
     }
-
+    this.communityService.increaseReactionCounter(messageReaction.chat.id);
     this.logger.log(`Message in DB: ${inspect(message)}`);
 
     await this.makeReward(message);
