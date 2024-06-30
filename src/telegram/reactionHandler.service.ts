@@ -60,7 +60,7 @@ export class ReactionHandlerService {
       return;
     }
     this.logger.log(`Message in DB: ${inspect(message)}`);
-
+    this.communityService.increaseReactionCounter(message.chatId);
     await this.makeReward(message);
   }
 
@@ -92,7 +92,6 @@ export class ReactionHandlerService {
           $set: { points: triggers.reaction.points },
         },
       );
-      this.communityService.increaseReactionCounter(message.chatId);
     } catch (error) {
       this.logger.error('Error while saving user after threshold', error);
     }
