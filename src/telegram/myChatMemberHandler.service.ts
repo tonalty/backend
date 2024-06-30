@@ -44,7 +44,7 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
     this.logger.log('update.myChatMember.new_chat_member.status', update.myChatMember.new_chat_member.status);
 
     // TODO: check this when we change settings of the chat from private to public
-    if (update.myChatMember.chat.type === 'supergroup' || update.myChatMember.chat.type === 'private') {
+    if (update.myChatMember.chat.type === 'private') {
       this.logger.log('Chat type was changed', update.myChatMember.chat.type);
 
       return;
