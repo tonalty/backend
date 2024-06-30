@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsBoolean, IsNumber, ValidateNested } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, ValidateNested } from 'class-validator';
 import { IReactionTrigger, IReferralTrigger, ITriggers } from 'src/data/community.entity';
 
 class ReferralTrigger implements IReferralTrigger {
@@ -30,10 +30,12 @@ class ReactionTrigger implements IReactionTrigger {
 class Triggers implements ITriggers {
   @ApiProperty()
   @ValidateNested()
+  @IsOptional()
   @Type(() => ReferralTrigger)
   referral: ReferralTrigger;
   @ApiProperty()
   @ValidateNested()
+  @IsOptional()
   @Type(() => ReactionTrigger)
   reaction: ReactionTrigger;
 }
