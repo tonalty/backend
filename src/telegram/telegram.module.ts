@@ -8,6 +8,7 @@ import { MyChatMemberHandlerService } from './myChatMemberHandler.service';
 import { ReactionHandlerService } from './reactionHandler.service';
 import { TelegramService } from './telegram.service';
 import { TelegramFacade } from './telegramFacade.service';
+import { TelegramController } from './telegram.controller';
 
 @Module({
   imports: [HttpModule, CommunityModule],
@@ -20,5 +21,6 @@ import { TelegramFacade } from './telegramFacade.service';
     ReferralsService,
     TelegramFacade,
   ],
+  controllers: [TelegramController],
 })
 export class TelegramModule {}

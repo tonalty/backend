@@ -81,4 +81,18 @@ export class TelegramService {
   getChatMember(userId: number, chatId: number): Promise<ChatMember> {
     return this.bot.telegram.getChatMember(chatId, userId);
   }
+
+  getBotInfo() {
+    const botInfo = this.bot.botInfo;
+
+    if (botInfo) {
+      return {
+        firstName: botInfo?.first_name,
+        lastName: botInfo?.last_name,
+        userName: botInfo.username,
+      };
+    }
+
+    throw new Error('Could not get bot information');
+  }
 }
