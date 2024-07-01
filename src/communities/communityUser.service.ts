@@ -69,19 +69,6 @@ export class CommunityUserService {
     return result;
   }
 
-  async createCommunityUser(userId: number, chatId: number, isAdmin: boolean): Promise<CommunityUserDto> {
-    const communityTitle = await this.communityService.getCommunityTitle(chatId);
-    const result = await this.communityUserModel.create({
-      userId: userId,
-      chatId: chatId,
-      communityName: communityTitle,
-      points: 0,
-      isAdmin: isAdmin,
-    });
-    this.logger.log(`Created a new community user. userId: ${userId}, chatId ${chatId}`);
-    return new CommunityUserDto(result);
-  }
-
   async createOrUpdateCommunityUser(userId: number, chatId: number, isAdmin: boolean): Promise<CommunityUserDto> {
     const communityTitle = await this.communityService.getCommunityTitle(chatId);
     const result = await this.communityUserModel.findOneAndUpdate(
