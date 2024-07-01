@@ -11,6 +11,7 @@ import { RewardPreview } from './dto/RewardPreviewDto';
 import { UpdateRewardDto } from './dto/UpdateRewardDto';
 import { UserRewardDto } from './dto/UserRewardDto';
 import { CommunityUserService } from 'src/communities/communityUser.service';
+import { BuyRewardResponseDto } from './dto/BuyRewardResponseDto';
 
 @Injectable()
 export class RewardService {
@@ -105,7 +106,7 @@ export class RewardService {
     }
   }
 
-  async buyReward(rewardId: string, chatId: number, userId: number) {
+  async buyReward(rewardId: string, chatId: number, userId: number): Promise<BuyRewardResponseDto> {
     const reward = await this.rewardModel.findOne({ _id: new Types.ObjectId(rewardId), chatId: chatId });
     if (!reward) {
       throw new NotFoundException(`Unable to find reward by id ${rewardId} in chat ${chatId}`);
@@ -115,5 +116,6 @@ export class RewardService {
       throw new BadRequestException('Unable to decrease points');
     }
     this.historyService.createRewardBuyRecord(userId, chatId, reward);
+    return new BuyRewardResponseDto(reward);
   }
 }

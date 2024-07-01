@@ -21,6 +21,7 @@ import { RewardPreview } from './dto/RewardPreviewDto';
 import { UpdateRewardDto } from './dto/UpdateRewardDto';
 import { UserRewardDto } from './dto/UserRewardDto';
 import { RewardService } from './reward.service';
+import { BuyRewardResponseDto } from './dto/BuyRewardResponseDto';
 
 @Controller('reward')
 export class RewardController {
@@ -119,8 +120,8 @@ export class RewardController {
     @Headers('tmaInitData') tmaInitData: string,
     @Param('rewardId') rewardId: string,
     @Param('chatId') chatId: number,
-  ) {
+  ): Promise<BuyRewardResponseDto> {
     const userId = this.tmaService.getUserId(tmaInitData);
-    this.rewardsService.buyReward(rewardId, chatId, userId);
+    return this.rewardsService.buyReward(rewardId, chatId, userId);
   }
 }
