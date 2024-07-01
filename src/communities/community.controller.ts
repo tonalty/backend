@@ -44,6 +44,7 @@ export class CommunityController {
     @Param('chatId') chatId: number,
   ): Promise<CommunityUserDto> {
     const userId = this.tmaService.getUserId(tmaInitData);
+    this.logger.log(`userId = ${userId}, chatId = ${chatId}`);
     const chatMember = await this.telegramService.getChatMember(userId, chatId);
     if (!chatMember) {
       throw new NotFoundException('Not found user in community');

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { DeleteResult } from 'mongodb';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { CommunityUser } from 'src/data/communityUser.entity';
 import { CommunityService } from './community.service';
 import { CommunityUserDto } from './dto/CommunityUserDto';
@@ -24,7 +24,7 @@ export class CommunityUserService {
     return this.communityUserModel.find({ userId: userId }).sort({ points: -1, _id: 1 });
   }
 
-  getCommunityUser(userId: number, chatId: number): Promise<CommunityUser | null> {
+  getCommunityUser(userId: number, chatId: number): Promise<(CommunityUser & { _id: Types.ObjectId }) | null> {
     return this.communityUserModel.findOne({ userId: userId, chatId: chatId });
   }
 
@@ -46,7 +46,7 @@ export class CommunityUserService {
     userId: number,
     chatId: number,
     pointsToSubtract: number,
-  ): Promise<CommunityUser | null> {
+  ): Promise<(CommunityUser & { _id: Types.ObjectId }) | null> {
     this.logger.log(`Attempting to decrease communityUser<${chatId}, ${userId}> by ${pointsToSubtract}`);
     const result = await this.communityUserModel.findOneAndUpdate(
       { userId: userId, chatId: chatId, $expr: { $gte: ['$points', pointsToSubtract] } },
@@ -103,11 +103,15 @@ export class CommunityUserService {
         new: true,
       },
     );
-    this.logger.log(`Created a new community user. userId: ${userId}, chatId ${chatId}`);
+    this.logger.log(`Created or updated a new community user. userId: ${userId}, chatId ${chatId}`);
     return new CommunityUserDto(result);
   }
 
   isChatMemberAdmin(chatMember: ChatMember): boolean {
     return chatMember.status == 'creator' || chatMember.status == 'administrator';
+  }
+
+  async updateCommunityUserId(oldChatId: number, newChatId: number) {
+    await this.communityUserModel.updateMany({ chatId: oldChatId }, { $set: { chatId: newChatId } });
   }
 }

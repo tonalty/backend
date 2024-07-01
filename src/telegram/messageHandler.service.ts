@@ -18,7 +18,17 @@ export class MessageHandlerService {
   ) {}
 
   async handle(update: NarrowedContext<Context<Update>, Update.MessageUpdate>) {
-    if (update.chat.type === 'private') {
+    this.logger.log(update.update);
+    if (update.update.message.hasOwnProperty('migrate_to_chat_id')) {
+      const newChatId = (update.update.message as any).migrate_to_chat_id;
+      const oldChatId = update.update.message.chat.id;
+      this.logger.log(`We are going to update community id from ${oldChatId} to ${newChatId}`);
+      if (newChatId !== undefined && oldChatId !== undefined) {
+        this.communityService.updateCommunityId(oldChatId, newChatId);
+        this.communityUserService.updateCommunityUserId(oldChatId, newChatId);
+      }
+    } else if (update.chat.type === 'private') {
+      this.logger.log('Skipping processing because chat type is private');
       return;
     }
 

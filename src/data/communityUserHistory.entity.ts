@@ -5,17 +5,14 @@ import { Reward } from './reward.entity';
 @Schema({ timestamps: true, autoIndex: true })
 export class CommunityUserHistory {
   @Prop()
-  userId: number;
-
-  @Prop()
-  communityId: number;
+  communityUserId: Types.ObjectId;
 
   @Prop({ default: false, type: MongooseSchema.Types.Mixed })
   data: CommunityUserHistoryData;
 }
 
 export const CommunityUserHistorySchema = SchemaFactory.createForClass(CommunityUserHistory);
-CommunityUserHistorySchema.index({ userId: 1, communityId: 1, createdAt: -1 });
+CommunityUserHistorySchema.index({ communityUserId: 1, createdAt: -1 });
 
 interface HistoryDataType {
   type: string;

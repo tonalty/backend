@@ -49,4 +49,38 @@ export abstract class AbstractChatMemberHandler {
       throw new Error(error);
     }
   }
+
+  protected async createCommunityUserIfNotExist1(
+    chatId: number,
+    userId: number,
+    communityName: string,
+    isAdmin: boolean,
+  ) {
+    this.logger.log('createCommunityUserIfNoExist');
+    // this.logger.log('chatId', chatId);
+    // this.logger.log('userId', userId);
+    // this.logger.log('communityName', communityName);
+    // this.logger.log('admins', admins);
+
+    try {
+      const result = await this.communityUserModel.updateOne(
+        { userId: userId, chatId: chatId },
+        {
+          $setOnInsert: {
+            userId: userId,
+            chatId,
+            points: 0,
+            isAdmin: isAdmin,
+            communityName: communityName ?? `private-${chatId}`,
+          },
+        },
+        { upsert: true },
+      );
+      if (result.upsertedCount) {
+        this.logger.log(`Adding new comunity user with id ${userId} and chatId ${chatId}`);
+      }
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
 }
