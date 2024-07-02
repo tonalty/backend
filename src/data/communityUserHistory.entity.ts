@@ -42,7 +42,7 @@ export class ReferralJoinData implements HistoryDataType {
 }
 
 export class RewardBuyData implements HistoryDataType {
-  type: 'rewardBuy';
+  type = 'rewardBuy';
   rewardTitle: string;
   rewardImageUrl: string;
   rewardValue: number;

@@ -68,6 +68,10 @@ export class MessageHandlerService {
       return;
     }
     const isAdmin = this.communityUserService.isChatMemberAdmin(chatMember);
-    this.communityUserService.createOrUpdateCommunityUser(userId, chatId, isAdmin);
+    try {
+      this.communityUserService.createOrUpdateCommunityUser(userId, chatId, isAdmin);
+    } catch (error) {
+      this.logger.log(error);
+    }
   }
 }
