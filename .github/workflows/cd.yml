@@ -2,9 +2,9 @@ name: Continuous Delivery
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
 
 jobs:
   Continuous-Delivery:
