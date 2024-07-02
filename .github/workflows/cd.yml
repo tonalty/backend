@@ -48,6 +48,6 @@ jobs:
           SSH_PATH: ${{ secrets.DEPLOYMENT_PATH }}
         run: |
           ssh staging "$SSH_PATH/stop-service.sh"
-          rsync -avzh ./node_modules staging:$SSH_PATH
-          rsync -av ./dist staging:$SSH_PATH
+          rsync -azh ./node_modules staging:$SSH_PATH
+          rsync -azh ./dist staging:$SSH_PATH
           ssh staging "$SSH_PATH/start-service.sh"
