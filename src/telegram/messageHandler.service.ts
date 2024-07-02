@@ -37,6 +37,11 @@ export class MessageHandlerService {
     } else if (update.update.message.hasOwnProperty('migrate_from_chat_id')) {
       // It could be also the case for race condition
       this.logger.log('Recieved migrate_from_chat_id message');
+      return;
+    } else if (update.update.message.hasOwnProperty('new_chat_participant')) {
+      // Presumably this kind of message is causing race condition and two records using findOneAndUpdate and updateOne with upsert are created
+      this.logger.log('Recieve new_chat_participant message');
+      return;
     } else if (update.chat.type === 'private') {
       this.logger.log('Skipping processing because chat type is private');
       return;
