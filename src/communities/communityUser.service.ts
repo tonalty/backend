@@ -17,11 +17,11 @@ export class CommunityUserService {
   ) {}
 
   getAdminCommunities(userId: number): Promise<CommunityUser[]> {
-    return this.communityUserModel.find({ userId: userId, isAdmin: true }).sort({ updatedAt: -1 });
+    return this.communityUserModel.find({ userId: userId, isAdmin: true }).sort({ createdAt: -1 });
   }
 
   getAllCommunities(userId: number) {
-    return this.communityUserModel.find({ userId: userId }).sort({ updatedAt: -1 });
+    return this.communityUserModel.find({ userId: userId }).sort({ createdAt: -1 });
   }
 
   getCommunityUser(userId: number, chatId: number): Promise<(CommunityUser & { _id: Types.ObjectId }) | null> {
