@@ -45,11 +45,11 @@ jobs:
           rm -rf node_modules
           yarn install --frozen-lockfile --production
 
-      - name: Stop and delete service
-        run: ssh staging "$SSH_PATH/stop-service.sh && rm -rf $SSH_PATH/node_modules && rm -rf $SSH_PATH/dist"
+      - name: Stop service
+        run: ssh staging "$SSH_PATH/stop-service.sh"
       - name: Copy node_modules and dist folders to target host
         run: |
-          scp -r ./node_modules staging:$SSH_PATH
-          scp -r ./dist staging:$SSH_PATH
+          rsync -avzh ./node_modules staging:$SSH_PATH/node_modules
+          rsync -av ./dist staging:$SSH_PATH/dist
       - name: Start service
         run: ssh staging "$SSH_PATH/start-service.sh"
