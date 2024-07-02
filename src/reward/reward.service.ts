@@ -86,7 +86,7 @@ export class RewardService {
     await this.communityUserService.validateCommunityUserPresent(userId, chatId);
     const rewards = await this.rewardModel.find(
       { chatId: chatId },
-      { _id: 1, imageUrl: 1, title: 1, value: 1 },
+      { _id: 1, chatId: 1, imageUrl: 1, title: 1, value: 1 },
       { m: limit, skip: offset },
     );
     if (rewards) {
