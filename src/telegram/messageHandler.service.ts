@@ -18,7 +18,27 @@ export class MessageHandlerService {
   ) {}
 
   async handle(update: NarrowedContext<Context<Update>, Update.MessageUpdate>) {
-    if (update.chat.type === 'private') {
+    this.logger.log(update.update);
+    if (update.update.message.hasOwnProperty('migrate_to_chat_id')) {
+      const newChatId = (update.update.message as any).migrate_to_chat_id;
+      const oldChatId = update.update.message.chat.id;
+      this.logger.log(`We are going to update community id from ${oldChatId} to ${newChatId}`);
+      if (newChatId !== undefined && oldChatId !== undefined) {
+        this.communityService.updateCommunityId(oldChatId, newChatId);
+        this.communityUserService.updateCommunityUserId(oldChatId, newChatId);
+      }
+      return;
+    } else if (update.update.message.hasOwnProperty('group_chat_created')) {
+      // When user first time creates a chat with bot, the bot will recieve message with group_chat_created: true, property.
+      // But in this case we will try to add user also by my_chat_member event. Because of it we may face race condition
+      // This condition used to prevent this case of race condition
+      this.logger.log('Received group chat created message');
+      return;
+    } else if (update.update.message.hasOwnProperty('migrate_from_chat_id')) {
+      // It could be also the case for race condition
+      this.logger.log('Recieved migrate_from_chat_id message');
+    } else if (update.chat.type === 'private') {
+      this.logger.log('Skipping processing because chat type is private');
       return;
     }
 
@@ -48,6 +68,6 @@ export class MessageHandlerService {
       return;
     }
     const isAdmin = this.communityUserService.isChatMemberAdmin(chatMember);
-    this.communityUserService.createCommunityUser(userId, chatId, isAdmin);
+    this.communityUserService.createOrUpdateCommunityUser(userId, chatId, isAdmin);
   }
 }

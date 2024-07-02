@@ -25,6 +25,7 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
   }
 
   async handle(update: NarrowedContext<Context<Update>, Update.ChatMemberUpdate>) {
+    this.logger.log(update.update);
     this.logger.log('update.chatMember.new_chat_member.status', update.chatMember.new_chat_member.status);
     // react when it is new user or user that previously created group joined
     const validStatuses = ['member', 'creator', 'left'];
@@ -161,12 +162,22 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
 
     if (communityUser.insertedCount || communityUser.upsertedCount) {
       try {
+        const firstCommunityUser = await this.communityUserModel.findOne(
+          { userId: referral.ownerId, chatId: chatId },
+          { _id: 1 },
+        );
+        const secondCommunityUser = await this.communityUserModel.findOne(
+          { userId: update.chatMember.from.id, chatId: chatId },
+          { _id: 1 },
+        );
+        if (!firstCommunityUser || !secondCommunityUser) {
+          throw Error('Unable to write history as communityUser not found');
+        }
         // TODO: CHECK CHAT HISTORY
         // right now only add points to owner of the link
         await this.communityUserHistoryModel.insertMany([
           {
-            userId: referral.ownerId,
-            communityId: chatId,
+            communityUserId: firstCommunityUser._id,
             data: new ReferralJoinData(
               referral.ownerId,
               referral.chatId,
@@ -176,8 +187,7 @@ export class ChatMemberHandlerService extends AbstractChatMemberHandler {
             ),
           },
           {
-            userId: update.chatMember.from.id,
-            communityId: chatId,
+            communityUserId: secondCommunityUser._id,
             data: new ReferralJoinData(
               update.chatMember.from.id,
               update.chatMember.chat.id,

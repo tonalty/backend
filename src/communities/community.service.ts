@@ -83,4 +83,8 @@ export class CommunityService {
       throw new Error(error);
     }
   }
+
+  async updateCommunityId(oldChatId: number, newChatId: number) {
+    await this.communityModel.updateOne({ chatId: oldChatId }, { $set: { chatId: newChatId } });
+  }
 }

@@ -109,8 +109,7 @@ export class ReactionHandlerService {
     if (communityUser) {
       try {
         await this.communityUserHistoryModel.create({
-          userId: communityUser.userId,
-          communityId: communityUser.chatId,
+          communityUserId: communityUser._id,
           data: new MessageReactionData(message._id, message.chatId, triggers.reaction.points),
         });
       } catch (error) {

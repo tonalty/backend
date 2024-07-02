@@ -115,7 +115,7 @@ export class RewardService {
     if (!result) {
       throw new BadRequestException('Unable to decrease points');
     }
-    this.historyService.createRewardBuyRecord(userId, chatId, reward);
+    this.historyService.createRewardBuyRecord(result, reward);
     return new BuyRewardResponseDto(reward);
   }
 }
