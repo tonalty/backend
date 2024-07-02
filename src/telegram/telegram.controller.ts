@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { TelegramService } from './telegram.service';
 
 interface BotInfo {
@@ -10,6 +10,11 @@ interface BotInfo {
 @Controller('telegram')
 export class TelegramController {
   constructor(private readonly telegramService: TelegramService) {}
+
+  @Get('/chat/:chatId')
+  getChat(@Param('chatId') chatId: number) {
+    return this.telegramService.getChat(chatId);
+  }
 
   @Get('/botInfo')
   getBotName(): BotInfo {

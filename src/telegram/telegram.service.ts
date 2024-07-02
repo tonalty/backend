@@ -6,13 +6,16 @@ import { ChatMemberHandlerService } from './chatMemberHandler.service';
 import { MessageHandlerService } from './messageHandler.service';
 import { MyChatMemberHandlerService } from './myChatMemberHandler.service';
 import { ReactionHandlerService } from './reactionHandler.service';
+import { HttpService } from '@nestjs/axios';
+import fs from 'fs';
+import { PUBLIC_FS_DIRECTORY } from 'src/app.module';
 
 @Injectable()
 export class TelegramService {
   private readonly logger = new Logger(TelegramService.name);
   private readonly bot;
 
-  constructor(configService: ConfigService) {
+  constructor(configService: ConfigService, private readonly httpService: HttpService) {
     const botToken = configService.getOrThrow('BOT_TOKEN');
     this.bot = new Telegraf(botToken);
   }
@@ -80,6 +83,25 @@ export class TelegramService {
 
   getChatMember(userId: number, chatId: number): Promise<ChatMember> {
     return this.bot.telegram.getChatMember(chatId, userId);
+  }
+
+  async getChat(chatId: number) {
+    const chat = await this.bot.telegram.getChat(chatId);
+
+    if (chat.photo) {
+      const fileLink = await this.bot.telegram.getFileLink(chat.photo.big_file_id);
+
+      await this.httpService.axiosRef.get(fileLink.toString(), { responseType: 'stream' }).then(
+        (response) =>
+          new Promise<void>((resolve, reject) => {
+            response.data
+              // save photo to directory
+              .pipe(fs.createWriteStream(`${PUBLIC_FS_DIRECTORY}/avatars/${chat.id}.png`))
+              .on('finish', () => resolve())
+              .on('error', (e: unknown) => reject(e));
+          }),
+      );
+    }
   }
 
   getBotInfo() {
