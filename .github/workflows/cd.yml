@@ -1,0 +1,44 @@
+name: Continuous Delivery
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+
+jobs:
+  Continuous-Delivery:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        env:
+          SSH_HOST: ${{ secrets.DEPLOYMENT_HOST }}
+          SSH_USER: ${{ secrets.DEPLOYMENT_USER }}
+          SSH_KEY: ${{ secrets.DEPLOYMENT_KEY }}
+        run: |
+          mkdir -p ~/.ssh/
+          cat >>~/.ssh/config <<END
+          Host staging
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/staging.key
+            StrictHostKeyChecking no
+          END
+          echo "$SSH_KEY" > ~/.ssh/staging.key
+          chmod 600 ~/.ssh/staging.key
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'yarn'
+      - name: Check out
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+      - name: Build
+        run: yarn build
+      - name: Copy dist to target host
+        env:
+          SSH_PATH: ${{ secrets.DEPLOYMENT_PATH }}
+        run: |
+          scp ./dist staging:$SSH_PATH
