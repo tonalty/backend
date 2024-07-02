@@ -9,8 +9,6 @@ on:
 jobs:
   Continuous-Delivery:
     runs-on: ubuntu-latest
-    env:
-      SSH_PATH: ${{ secrets.DEPLOYMENT_PATH }}
     steps:
       - name: Configure SSH
         env:
@@ -45,11 +43,11 @@ jobs:
           rm -rf node_modules
           yarn install --frozen-lockfile --production
 
-      - name: Stop service
-        run: ssh staging "$SSH_PATH/stop-service.sh"
-      - name: Copy node_modules and dist folders to target host
+      - name: Stop service, Copy node_modules and dist folders to target host, Start service
+        env:
+          SSH_PATH: ${{ secrets.DEPLOYMENT_PATH }}
         run: |
-          rsync -avzh ./node_modules staging:$SSH_PATH/node_modules
-          rsync -av ./dist staging:$SSH_PATH/dist
-      - name: Start service
-        run: ssh staging "$SSH_PATH/start-service.sh"
+          ssh staging "$SSH_PATH/stop-service.sh"
+          rsync -avzh ./node_modules staging:$SSH_PATH
+          rsync -av ./dist staging:$SSH_PATH
+          ssh staging "$SSH_PATH/start-service.sh"
