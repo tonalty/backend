@@ -34,20 +34,21 @@ jobs:
         with:
           node-version: '20.x'
           cache: 'yarn'
-      - name: Install production dependencies into node_modules.new
-        run: |
-          yarn install --frozen-lockfile --production
-          mv node_modules node_modules.new
       - name: Install dependencies
         run: yarn --frozen-lockfile
       - name: Build
         run: yarn build
 
+      - name: Remove node_modules and install production dependencies
+        run: |
+          rm -rf node_modules
+          yarn install --frozen-lockfile --production
+
       - name: Stop and delete service
         run: ssh staging '$SSH_PATH/stop-service.sh && rm -rf $SSH_PATH/node_modules && rm -rf $SSH_PATH/dist'
-      - name: Copy dist to target host
+      - name: Copy node_modules and dist folders to target host
         run: |
-          scp -r ./node_modules.new/ staging:$SSH_PATH/node_modules
+          scp -r ./node_modules staging:$SSH_PATH
           scp -r ./dist staging:$SSH_PATH
       - name: Start service
         run: ssh staging '$SSH_PATH/start-service.sh'
