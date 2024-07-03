@@ -48,12 +48,14 @@ export class RewardBuyData implements HistoryDataType {
   rewardValue: number;
   rewardDescription: string;
   rewardMessage: string;
+  rewardDecreasedPoints: number;
 
-  constructor(reward: Reward) {
+  constructor(reward: Reward, rewardDecreasedPoints: number) {
     this.rewardTitle = reward.title;
     this.rewardImageUrl = reward.imageUrl;
     this.rewardValue = reward.value;
     this.rewardDescription = reward.description;
     this.rewardMessage = reward.rewardMessage;
+    this.rewardDecreasedPoints = rewardDecreasedPoints;
   }
 }

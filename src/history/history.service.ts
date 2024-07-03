@@ -28,7 +28,7 @@ export class HistoryService {
   async createRewardBuyRecord(communityUser: CommunityUser & { _id: Types.ObjectId }, reward: Reward) {
     await this.communityUserHistoryModel.create({
       communityUserId: communityUser._id,
-      data: new RewardBuyData(reward),
+      data: new RewardBuyData(reward, -communityUser.points),
     });
   }
 }
