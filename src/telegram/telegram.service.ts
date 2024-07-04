@@ -95,4 +95,18 @@ export class TelegramService {
 
     throw new Error('Could not get bot information');
   }
+
+  async getBotStatus(chatId: number) {
+    const botInfo = this.bot.botInfo;
+
+    if (botInfo) {
+      const chatMember = await this.bot.telegram.getChatMember(chatId, botInfo.id);
+
+      this.logger.log('chatMember', JSON.stringify(chatMember));
+
+      return { isAdmin: chatMember.status === 'administrator' };
+    }
+
+    throw new Error('Could not get bot information');
+  }
 }
