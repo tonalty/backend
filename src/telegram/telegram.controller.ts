@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { TelegramService } from './telegram.service';
 
 interface BotInfo {
@@ -11,8 +11,13 @@ interface BotInfo {
 export class TelegramController {
   constructor(private readonly telegramService: TelegramService) {}
 
-  @Get('/botInfo')
+  @Get('/botInfo/')
   getBotName(): BotInfo {
     return this.telegramService.getBotInfo();
+  }
+
+  @Get('/botInfo/:chatId')
+  getBotStatus(@Param('chatId') chatId: number): Promise<{ isAdmin: boolean }> {
+    return this.telegramService.getBotStatus(chatId);
   }
 }
