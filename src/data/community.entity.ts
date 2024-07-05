@@ -69,6 +69,9 @@ export class Community {
 
   @Prop()
   reactions: number;
+
+  @Prop()
+  photoLink: string;
 }
 
 export interface Triggers {

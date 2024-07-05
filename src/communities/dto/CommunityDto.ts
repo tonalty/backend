@@ -9,6 +9,7 @@ export class CommunityDto {
   members: number;
   comments: number;
   reactions: number;
+  photoLink?: string;
 
   constructor(community: Community) {
     this.title = community.title;
@@ -21,5 +22,6 @@ export class CommunityDto {
     this.members = community.members;
     this.comments = community.comments;
     this.reactions = community.reactions;
+    this.photoLink = community.photoLink;
   }
 }
