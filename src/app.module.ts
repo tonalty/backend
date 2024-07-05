@@ -15,11 +15,19 @@ import { RewardModule } from './reward/reward.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { TempImageModule } from './temp/image/image.module';
 import { join } from 'path';
+import { DownloaderModule } from './util/downloader/downloader.module';
+import { MessageHandlerService } from './telegram/messageHandler.service';
+import { ReactionHandlerService } from './telegram/reactionHandler.service';
+import { ChatMemberHandlerService } from './telegram/chatMemberHandler.service';
+import { MyChatMemberHandlerService } from './telegram/myChatMemberHandler.service';
+import { TelegramService } from './telegram/telegram.service';
 
 export const PUBLIC_FS_DIRECTORY = join(__dirname, '..', 'public');
 export const PUBLIC_FS_IMAGE_DIRECTORY = join(PUBLIC_FS_DIRECTORY, 'image');
+export const PUBLIC_FS_COMMUNITY_AVATAR_DIRECTORY = join(PUBLIC_FS_DIRECTORY, 'communityAvatar');
 export const PUBLIC_ENDPOINT = '/backend/public/';
 export const PUBLIC_IMAGE_ENDPOINT = join(PUBLIC_ENDPOINT, 'image');
+export const PUBLIC_COMMUNITY_AVATAR_ENDPOINT = join(PUBLIC_ENDPOINT, 'communityAvatar');
 
 @Module({
   imports: [
@@ -42,8 +50,16 @@ export const PUBLIC_IMAGE_ENDPOINT = join(PUBLIC_ENDPOINT, 'image');
       serveRoot: PUBLIC_ENDPOINT,
     }),
     TempImageModule,
+    DownloaderModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    TelegramService,
+    MessageHandlerService,
+    ReactionHandlerService,
+    ChatMemberHandlerService,
+    MyChatMemberHandlerService,
+  ],
 })
 export class AppModule {}

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Telegraf } from 'telegraf';
 import { ChatMember } from 'telegraf/typings/core/types/typegram';
+import { URL } from 'url';
 import { ChatMemberHandlerService } from './chatMemberHandler.service';
 import { MessageHandlerService } from './messageHandler.service';
 import { MyChatMemberHandlerService } from './myChatMemberHandler.service';
@@ -108,5 +109,13 @@ export class TelegramService {
     }
 
     throw new Error('Could not get bot information');
+  }
+
+  async getCommunityPhotoDownloadLink(chatId: number): Promise<URL | undefined> {
+    const chat = await this.bot.telegram.getChat(chatId);
+    if (!chat.photo) {
+      return;
+    }
+    return this.bot.telegram.getFileLink(chat.photo.big_file_id);
   }
 }

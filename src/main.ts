@@ -4,7 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as fs from 'fs';
 import * as morgan from 'morgan';
-import { AppModule, PUBLIC_FS_IMAGE_DIRECTORY } from './app.module';
+import { AppModule, PUBLIC_FS_COMMUNITY_AVATAR_DIRECTORY, PUBLIC_FS_IMAGE_DIRECTORY } from './app.module';
 import { PUBLIC_FS_DIRECTORY } from './app.module';
 import { existsSync, mkdirSync } from 'fs';
 
@@ -54,5 +54,8 @@ function createPublicDirectories() {
   }
   if (!existsSync(PUBLIC_FS_IMAGE_DIRECTORY)) {
     mkdirSync(PUBLIC_FS_IMAGE_DIRECTORY);
+  }
+  if (!existsSync(PUBLIC_FS_COMMUNITY_AVATAR_DIRECTORY)) {
+    mkdirSync(PUBLIC_FS_COMMUNITY_AVATAR_DIRECTORY);
   }
 }
