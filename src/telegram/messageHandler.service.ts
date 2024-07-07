@@ -74,7 +74,7 @@ export class MessageHandlerService {
     }
     const isAdmin = this.communityUserService.isChatMemberAdmin(chatMember);
     try {
-      this.communityUserService.createOrUpdateCommunityUser(userId, chatId, isAdmin);
+      await this.communityUserService.createOrUpdateCommunityUser(userId, chatId, isAdmin);
     } catch (error) {
       this.logger.log(error);
     }
