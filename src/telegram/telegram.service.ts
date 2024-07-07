@@ -83,14 +83,14 @@ export class TelegramService {
     return this.bot.telegram.getChatMember(chatId, userId);
   }
 
-  getBotInfo() {
-    const botInfo = this.bot.botInfo;
+  async getBotInfo() {
+    const getMe = await this.bot.telegram.getMe();
 
-    if (botInfo) {
+    if (getMe) {
       return {
-        firstName: botInfo?.first_name,
-        lastName: botInfo?.last_name,
-        userName: botInfo.username,
+        firstName: getMe?.first_name,
+        lastName: getMe?.last_name,
+        userName: getMe.username,
       };
     }
 
@@ -98,10 +98,10 @@ export class TelegramService {
   }
 
   async getBotStatus(chatId: number) {
-    const botInfo = this.bot.botInfo;
+    const getMe = await this.bot.telegram.getMe();
 
-    if (botInfo) {
-      const chatMember = await this.bot.telegram.getChatMember(chatId, botInfo.id);
+    if (getMe) {
+      const chatMember = await this.bot.telegram.getChatMember(chatId, getMe.id);
 
       this.logger.log('chatMember', JSON.stringify(chatMember));
 

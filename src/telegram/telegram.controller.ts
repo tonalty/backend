@@ -12,7 +12,7 @@ export class TelegramController {
   constructor(private readonly telegramService: TelegramService) {}
 
   @Get('/botInfo/')
-  getBotName(): BotInfo {
+  getBotName(): Promise<BotInfo> {
     return this.telegramService.getBotInfo();
   }
 
