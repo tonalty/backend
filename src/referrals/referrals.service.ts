@@ -126,6 +126,7 @@ export class ReferralsService {
   }
 
   async joinUserByReferralLink(currentUser: WebAppUser, chatId: number, ownerId: number, title: string) {
+    this.logger.log('currentUser, chatId, ownerId, title', JSON.stringify(currentUser), chatId, ownerId, title);
     const referral = await this.referralModel.findOne({ chatId, ownerId });
 
     if (!referral) {
@@ -159,6 +160,9 @@ export class ReferralsService {
     } catch (error) {
       throw new Error(`Error while adding user to visitors ${error}`);
     }
+
+    this.logger.log('referral', JSON.stringify(referral));
+    this.logger.log('referralUpdate', JSON.stringify(referralUpdate));
 
     if (!referralUpdate) {
       throw new Error(`This user with id ${currentUser.id} had already recieved points`);
