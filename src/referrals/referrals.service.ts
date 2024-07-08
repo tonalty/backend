@@ -58,11 +58,9 @@ export class ReferralsService {
 
       const params = { ownerId: userId, title, name, telegramInviteLink: community?.inviteLink, chatId };
       const link = this.createReferralLink(params);
-      const _id = new mongoose.Types.ObjectId().toString();
 
       try {
         await this.referralModel.create({
-          _id,
           chatId: chatId,
           ownerId: userId,
           ownerName: name,
@@ -151,7 +149,8 @@ export class ReferralsService {
     try {
       referralUpdate = await this.referralModel.findOneAndUpdate(
         {
-          _id: referral._id,
+          chatId,
+          ownerId,
           // only update visitorIds if we do not have this user previously else return null
           visitorIds: {
             $ne: currentUser.id,
