@@ -3,6 +3,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
+import { CommunityService } from 'src/communities/community.service';
+import { Community } from 'src/data/community.entity';
+import { CommunityUser } from 'src/data/communityUser.entity';
+import { CommunityUserHistory, ReferralJoinData } from 'src/data/communityUserHistory.entity';
 import { Referral } from 'src/data/referral.entity';
 
 export interface TgWebAppStartParam {
@@ -22,8 +26,12 @@ export class ReferralsService {
   constructor(
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
+    private readonly communityService: CommunityService,
 
     @InjectModel(Referral.name) private readonly referralModel: Model<Referral>,
+    @InjectModel(CommunityUser.name) protected communityUserModel: Model<CommunityUser>,
+    @InjectModel(Community.name) protected communityModel: Model<Community>,
+    @InjectModel(CommunityUserHistory.name) protected communityUserHistoryModel: Model<CommunityUserHistory>,
   ) {
     this.botToken = this.configService.getOrThrow('BOT_TOKEN');
     this.botName = this.configService.getOrThrow('BOT_NAME');
@@ -40,47 +48,24 @@ export class ReferralsService {
     });
 
     if (referral === null) {
-      let inviteLinkResponse;
+      const community = await this.communityModel.findOne({ chatId: chatId });
 
-      const _id = new mongoose.Types.ObjectId().toString();
+      if (!community) {
+        this.logger.error('Failed to find community when generating referral');
 
-      this.logger.log('_id generated', _id);
-
-      try {
-        // create only once
-        inviteLinkResponse = await this.httpService.axiosRef.post(
-          `https://api.telegram.org/bot${this.botToken}/createChatInviteLink`,
-          {
-            chat_id: chatId,
-            creates_join_request: false,
-            name: `${_id}`,
-          },
-        );
-      } catch (error) {
-        this.logger.error('Error while retrieving telegram invite link check that bot has admin rights!!!', error);
+        throw new Error('Failed to find community when generating referral');
       }
 
-      if (!inviteLinkResponse) {
-        throw new Error('Could not recieve telegram invite link');
-      }
-
-      const {
-        data: {
-          result: { invite_link: telegramInviteLink },
-        },
-      } = inviteLinkResponse;
-
-      const params = { ownerId: userId, title, name, telegramInviteLink, chatId };
+      const params = { ownerId: userId, title, name, telegramInviteLink: community?.inviteLink, chatId };
       const link = this.createReferralLink(params);
 
       try {
         await this.referralModel.create({
-          _id,
           chatId: chatId,
           ownerId: userId,
           ownerName: name,
           link,
-          inviteLink: telegramInviteLink,
+          inviteLink: community?.inviteLink,
         });
 
         return Promise.resolve(link);
@@ -90,6 +75,40 @@ export class ReferralsService {
     }
 
     return Promise.resolve(referral.link);
+  }
+
+  async generateInviteLink(chatId: number): Promise<string> {
+    let inviteLinkResponse;
+
+    const _id = new mongoose.Types.ObjectId().toString();
+
+    this.logger.log('_id generated', _id);
+
+    try {
+      // create only once
+      inviteLinkResponse = await this.httpService.axiosRef.post(
+        `https://api.telegram.org/bot${this.botToken}/createChatInviteLink`,
+        {
+          chat_id: chatId,
+          creates_join_request: false,
+          name: `${_id}`,
+        },
+      );
+    } catch (error) {
+      this.logger.error('Error while retrieving telegram invite link check that bot has admin rights!!!', error);
+    }
+
+    if (!inviteLinkResponse) {
+      throw new Error('Could not recieve telegram invite link');
+    }
+
+    const {
+      data: {
+        result: { invite_link: telegramInviteLink },
+      },
+    } = inviteLinkResponse;
+
+    return telegramInviteLink;
   }
 
   createReferralLink(params: unknown) {
@@ -106,23 +125,138 @@ export class ReferralsService {
     return Buffer.from(payload, 'base64').toString();
   }
 
-  // async tgWebAppStartParam(payload: TgWebAppStartParam) {
-  //   const webAppInitData = this.tmaService.parseWebAppInitData(payload['#tgWebAppData']);
+  async joinUserByReferralLink(currentUser: WebAppUser, chatId: number, ownerId: number, title: string) {
+    const referral = await this.referralModel.findOne({ chatId, ownerId });
 
-  //   const startParam = new URLSearchParams(payload['#tgWebAppData']).get('start_param');
+    if (!referral) {
+      throw new Error(`Could not find referral with by inviteLink`);
+    }
 
-  //   if (!startParam) {
-  //     throw new Error('start_param should exist');
-  //   }
+    if (!currentUser.id) {
+      throw new Error('Joined user does not have id');
+    }
 
-  //   const ownerId = JSON.parse(Buffer.from(startParam, 'base64').toString()).ownerId;
+    if (currentUser.is_bot) {
+      throw new Error('Joined user is bot');
+    }
 
-  //   await this.referralModel.findOneAndUpdate(
-  //     { ownerId },
-  //     {
-  //       isActivated: true,
-  //       visitorId: webAppInitData.user?.id,
-  //     },
-  //   );
-  // }
+    if (referral.ownerId === currentUser.id) {
+      throw new Error('Owner id of the link is the same as user id, so points would not be assigned');
+    }
+
+    let referralUpdate;
+    try {
+      referralUpdate = await this.referralModel.findOneAndUpdate(
+        {
+          _id: referral._id,
+          // only update visitorIds if we do not have this user previously else return null
+          visitorIds: {
+            $ne: currentUser.id,
+          },
+        },
+        { $addToSet: { visitorIds: currentUser.id } },
+      );
+    } catch (error) {
+      throw new Error(`Error while adding user to visitors ${error}`);
+    }
+
+    if (!referralUpdate) {
+      throw new Error(`This user with id ${currentUser.id} had already recieved points`);
+    }
+
+    let communityUser;
+    let triggers;
+
+    try {
+      triggers = (await this.communityModel.findOne({ chatId: chatId }, { triggers: 1 }))?.triggers;
+    } catch (error) {
+      this.logger.log(error);
+    }
+
+    if (!triggers) {
+      throw new Error('No triggers recieved');
+    }
+
+    this.logger.log('referral', JSON.stringify(referral.ownerId));
+    // replace
+    try {
+      communityUser = await this.communityUserModel.bulkWrite([
+        {
+          updateOne: {
+            filter: {
+              userId: referral.ownerId,
+              chatId: chatId,
+            },
+            update: {
+              $inc: { points: triggers.referral.inviterPoints },
+              communityName: title,
+            },
+            upsert: true,
+          },
+        },
+        {
+          updateOne: {
+            filter: {
+              userId: currentUser.id,
+              chatId: chatId,
+            },
+            update: {
+              $inc: { points: triggers.referral.inviteePoints },
+              communityName: title,
+            },
+            upsert: true,
+          },
+        },
+      ]);
+      this.communityService.increaseMemberCounter(chatId);
+    } catch (error) {
+      throw new Error(`Error while increasing points ${error}`);
+    }
+
+    this.logger.log('communityUser', communityUser);
+
+    if (communityUser.insertedCount || communityUser.upsertedCount) {
+      try {
+        const firstCommunityUser = await this.communityUserModel.findOne(
+          { userId: referral.ownerId, chatId: chatId },
+          { _id: 1 },
+        );
+        const secondCommunityUser = await this.communityUserModel.findOne(
+          { userId: currentUser.id, chatId: chatId },
+          { _id: 1 },
+        );
+        if (!firstCommunityUser || !secondCommunityUser) {
+          throw Error('Unable to write history as communityUser not found');
+        }
+        // TODO: CHECK CHAT HISTORY
+        // right now only add points to owner of the link
+        await this.communityUserHistoryModel.insertMany([
+          {
+            communityUserId: firstCommunityUser._id,
+            data: new ReferralJoinData(
+              referral.ownerId,
+              referral.chatId,
+              triggers.referral.inviterPoints,
+              // maybe it need to be like this currentUser.username || currentUser.first_name || String(currentUser.id),
+              referral.ownerName || String(referral.id),
+              true,
+            ),
+          },
+          {
+            communityUserId: secondCommunityUser._id,
+            data: new ReferralJoinData(
+              currentUser.id,
+              chatId,
+              triggers.referral.inviteePoints,
+              currentUser.username || currentUser.first_name || String(currentUser.id),
+              false,
+            ),
+          },
+        ]);
+      } catch (error) {
+        throw new Error(`Error while adding user history record ${error}`);
+      }
+    }
+    this.logger.log('Points were succesfully sent');
+  }
 }

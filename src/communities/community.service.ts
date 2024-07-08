@@ -71,7 +71,13 @@ export class CommunityService {
     return result.title;
   }
 
-  async createOrUpdateCommunity(chatId: number, title: string, triggers: Triggers, chatMemberCount: number) {
+  async createOrUpdateCommunity(
+    chatId: number,
+    title: string,
+    triggers: Triggers,
+    chatMemberCount: number,
+    inviteLink?: string,
+  ) {
     try {
       // create
       const response = await this.communityModel.findOneAndUpdate(
@@ -83,6 +89,7 @@ export class CommunityService {
             triggers,
             comments: 0,
             reactions: 0,
+            inviteLink,
           },
           $set: {
             members: chatMemberCount,
@@ -109,5 +116,9 @@ export class CommunityService {
 
   async updateCommunityId(oldChatId: number, newChatId: number) {
     await this.communityModel.updateOne({ chatId: oldChatId }, { $set: { chatId: newChatId } });
+  }
+
+  async updateInviteLink(chatId: number, inviteLink: string) {
+    return await this.communityModel.updateOne({ chatId }, { inviteLink });
   }
 }
