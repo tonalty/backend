@@ -14,9 +14,6 @@ export class Referral {
   @Prop()
   link: string;
 
-  @Prop()
-  inviteLink: string;
-
   @Prop({ default: [] })
   visitorIds: number[];
 }

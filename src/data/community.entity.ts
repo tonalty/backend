@@ -72,6 +72,9 @@ export class Community {
 
   @Prop()
   photoLink: string;
+
+  @Prop()
+  inviteLink?: string;
 }
 
 export interface Triggers {

@@ -51,9 +51,22 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
       return;
     }
 
-    if (update.myChatMember.old_chat_member.status === 'left') {
-      const isBotAdmin = update.myChatMember.new_chat_member.status === 'administrator';
-      this.handleBotAddedToChat(update, isBotAdmin);
+    if (
+      update.myChatMember.new_chat_member.status === 'administrator' &&
+      update.myChatMember.old_chat_member.status === 'left'
+    ) {
+      await this.handleBotAddedToChatAsAdmin(update);
+    } else if (
+      update.myChatMember.new_chat_member.status === 'administrator' &&
+      update.myChatMember.old_chat_member.status !== 'left'
+    ) {
+      // bot promoted to administrator
+      await this.updateInviteLink(update.myChatMember.chat.id);
+    } else if (
+      update.myChatMember.old_chat_member.status !== 'administrator' &&
+      update.myChatMember.old_chat_member.status === 'left'
+    ) {
+      await this.handleBotAddedToChatAsNotAdmin(update);
     } else if (update.myChatMember.new_chat_member.status === 'left') {
       // in case bot is deleted we delete community also
       await this.deleteCommunity(update.myChatMember.chat.id);
@@ -72,10 +85,7 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
     return 1;
   }
 
-  private async handleBotAddedToChat(
-    update: NarrowedContext<Context<Update>, Update.MyChatMemberUpdate>,
-    isBotAdmin: boolean,
-  ) {
+  private async handleBotAddedToChatAsNotAdmin(update: NarrowedContext<Context<Update>, Update.MyChatMemberUpdate>) {
     const chatInfo = await update.getChat();
     // TODO: Get chat title from update message
     const title = (chatInfo as Chat.GroupGetChat).title;
@@ -87,17 +97,49 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
 
     const chatMemberCount = await this.getChatMembersCount(update);
 
-    await this.communityService.createOrUpdateCommunity(update.myChatMember.chat.id, title, triggers, chatMemberCount);
-
-    await this.createCommunityUserIfNotExist1(
+    await this.communityService.createOrUpdateCommunity(
       update.myChatMember.chat.id,
-      update.myChatMember.from.id,
       title,
-      isBotAdmin,
+      triggers,
+      chatMemberCount,
+      undefined,
     );
+
+    await this.createCommunityUserIfNotExist1(update.myChatMember.chat.id, update.myChatMember.from.id, title, false);
 
     await update.sendMessage(`https://t.me/${this.botName}/${this.webAppName}`);
 
+    await this.sendCommunityLink(update);
+  }
+  private async handleBotAddedToChatAsAdmin(update: NarrowedContext<Context<Update>, Update.MyChatMemberUpdate>) {
+    const chatInfo = await update.getChat();
+    // TODO: Get chat title from update message
+    const title = (chatInfo as Chat.GroupGetChat).title;
+
+    const triggers: Triggers = {
+      reaction: new ReactionTrigger(0, 0, false),
+      referral: new ReferralTrigger(0, 0, false),
+    };
+
+    const chatMemberCount = await this.getChatMembersCount(update);
+
+    const inviteLink = await this.referralService.generateInviteLink(chatInfo.id);
+    await this.communityService.createOrUpdateCommunity(
+      update.myChatMember.chat.id,
+      title,
+      triggers,
+      chatMemberCount,
+      inviteLink,
+    );
+
+    await this.createCommunityUserIfNotExist1(update.myChatMember.chat.id, update.myChatMember.from.id, title, true);
+
+    await update.sendMessage(`https://t.me/${this.botName}/${this.webAppName}`);
+
+    await this.sendCommunityLink(update);
+  }
+
+  async sendCommunityLink(update: NarrowedContext<Context<Update>, Update.MyChatMemberUpdate>) {
     try {
       this.logger.log('Sending photo from', PUBLIC_FS_DIRECTORY);
 
@@ -119,5 +161,10 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
 
       this.logger.error(error);
     }
+  }
+
+  async updateInviteLink(chatId: number) {
+    const inviteLink = await this.referralService.generateInviteLink(chatId);
+    return await this.communityService.updateInviteLink(chatId, inviteLink);
   }
 }

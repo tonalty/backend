@@ -27,11 +27,6 @@ export class ReferralsController {
     return this.referralsService.generateReferral(userInfo.id, body.chatId, body.title, name);
   }
 
-  // @Post('tgWebAppStartParam')
-  // tgWebAppStartParam(@Body() payload: TgWebAppStartParam) {
-  //   return this.referralsService.tgWebAppStartParam(payload);
-  // }
-
   @Get('currentUser')
   getUserInfo(@Headers('tmaInitData') tmaInitData: string) {
     return this.tmaService.getUserInfo(tmaInitData);
@@ -40,5 +35,15 @@ export class ReferralsController {
   @Get('startParam')
   getStartParam(@Headers('startParam') startParam: string) {
     return this.referralsService.decodeStartParam(startParam);
+  }
+
+  @Post('join')
+  joinUserByReferralLink(
+    @Headers('tmaInitData') tmaInitData: string,
+    @Body() body: { chatId: number; ownerId: number; title: string },
+  ): Promise<void> {
+    const userInfo = this.tmaService.getUserInfo(tmaInitData);
+
+    return this.referralsService.joinUserByReferralLink(userInfo, body.chatId, body.ownerId, body.title);
   }
 }
