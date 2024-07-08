@@ -149,14 +149,13 @@ export class ReferralsService {
     try {
       referralUpdate = await this.referralModel.findOneAndUpdate(
         {
-          _id: referral._id,
+          _id: new mongoose.Types.ObjectId(referral._id),
           // only update visitorIds if we do not have this user previously else return null
           visitorIds: {
             $ne: currentUser.id,
           },
         },
         { $addToSet: { visitorIds: currentUser.id } },
-        { new: true },
       );
     } catch (error) {
       throw new Error(`Error while adding user to visitors ${error}`);
