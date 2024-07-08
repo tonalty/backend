@@ -58,9 +58,11 @@ export class ReferralsService {
 
       const params = { ownerId: userId, title, name, telegramInviteLink: community?.inviteLink, chatId };
       const link = this.createReferralLink(params);
+      const _id = new mongoose.Types.ObjectId().toString();
 
       try {
         await this.referralModel.create({
+          _id,
           chatId: chatId,
           ownerId: userId,
           ownerName: name,
