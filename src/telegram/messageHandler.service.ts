@@ -60,8 +60,8 @@ export class MessageHandlerService {
       messageId: ctx.message.message_id,
       creatorUserId: ctx.message.from.id,
     });
-    this.communityService.increaseMessageCounter(ctx.message.chat.id);
-    this.createCommunityUserIfNotExist(ctx.message.from.id, ctx.message.chat.id, ctx.telegram);
+    this.communityService.increaseMessageCounter(forwardedFromChatId ?? ctx.message.chat.id);
+    this.createCommunityUserIfNotExist(ctx.message.from.id, forwardedFromChatId ?? ctx.message.chat.id, ctx.telegram);
     this.logger.log('Message in DB:', JSON.stringify(message));
   }
 
