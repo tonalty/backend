@@ -48,7 +48,10 @@ export class ReferralsController {
     },
   })
   @Post('join')
-  joinUserByReferralLink(@Headers('tmaInitData') tmaInitData: string, @Body() body: ReferralJoinDto): Promise<void> {
+  joinUserByReferralLink(
+    @Headers('tmaInitData') tmaInitData: string,
+    @Body() body: ReferralJoinDto,
+  ): Promise<{ success: boolean }> {
     const userInfo = this.tmaService.getUserInfo(tmaInitData);
 
     return this.referralsService.joinUserByReferralLink(userInfo, body.chatId, body.ownerId, body.title);

@@ -261,5 +261,7 @@ export class ReferralsService {
       }
     }
     this.logger.log('Points were succesfully sent');
+
+    return { success: true };
   }
 }
