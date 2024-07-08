@@ -19,9 +19,9 @@ export class TelegramService {
   }
 
   registerMessageReactionHandler(reactionHandlerService: ReactionHandlerService) {
-    this.bot.on('message_reaction', async (update) => {
+    this.bot.on('message_reaction', async (ctx) => {
       try {
-        await reactionHandlerService.handle(update.messageReaction);
+        await reactionHandlerService.handle(ctx);
       } catch (error) {
         this.logger.error('Error while reaction', error);
       }

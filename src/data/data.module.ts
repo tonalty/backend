@@ -2,11 +2,10 @@ import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MongooseModule, SchemaFactory } from '@nestjs/mongoose';
 import { Community } from './community.entity';
-import { Message } from './message.entity';
-import { User } from './user.entity';
-import { Referral } from './referral.entity';
 import { CommunityUser, CommunityUserSchema } from './communityUser.entity';
 import { CommunityUserHistory, CommunityUserHistorySchema } from './communityUserHistory.entity';
+import { Message } from './message.entity';
+import { Referral } from './referral.entity';
 import { Reward, RewardSchema } from './reward.entity';
 import { TempImage, TempImageSchema } from './tempImage.entity';
 
@@ -37,10 +36,6 @@ import { TempImage, TempImageSchema } from './tempImage.entity';
         {
           name: Message.name,
           schema: SchemaFactory.createForClass(Message),
-        },
-        {
-          name: User.name,
-          schema: SchemaFactory.createForClass(User),
         },
         {
           name: Referral.name,

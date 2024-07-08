@@ -6,7 +6,8 @@ import { Community } from 'src/data/community.entity';
 import { CommunityUser } from 'src/data/communityUser.entity';
 import { CommunityUserHistory, MessageReactionData } from 'src/data/communityUserHistory.entity';
 import { Message } from 'src/data/message.entity';
-import { MessageReactionUpdated } from 'telegraf/typings/core/types/typegram';
+import { Context, NarrowedContext } from 'telegraf';
+import { Update } from 'telegraf/typings/core/types/typegram';
 import { inspect } from 'util';
 
 @Injectable()
@@ -21,7 +22,9 @@ export class ReactionHandlerService {
     private readonly communityService: CommunityService,
   ) {}
 
-  async handle(messageReaction: MessageReactionUpdated) {
+  async handle(ctx: NarrowedContext<Context<Update>, Update.MessageReactionUpdate>) {
+    this.logger.log(ctx.update);
+    const messageReaction = ctx.messageReaction;
     const message = await this.messageModel.findOneAndUpdate(
       {
         chatId: messageReaction.chat.id,
@@ -31,22 +34,6 @@ export class ReactionHandlerService {
         $inc: {
           totalReactionsForMsg: messageReaction.new_reaction.length - messageReaction.old_reaction.length,
         },
-        // ToDo: either remove or replace with 2 DB calls
-        // It stores all reactions that user set for the message
-        /*
-        $push: {
-          reactions: messageReaction.new_reaction.map((reactionType) => ({
-            ...reactionType,
-            userId: messageReaction.user?.id,
-          })),
-        },
-        $pull: {
-          reactions: messageReaction.old_reaction.map((reactionType) => ({
-            ...reactionType,
-            userId: messageReaction.user?.id,
-          })),
-        },
-        */
       },
       {
         new: true,
@@ -66,9 +53,9 @@ export class ReactionHandlerService {
 
   async makeReward(message: Message & { _id: Types.ObjectId }) {
     let triggers;
-
+    const targetChatId = message.forwardedFromChatId ?? message.chatId;
     try {
-      triggers = (await this.communityModel.findOne({ chatId: message.chatId }, { triggers: 1 }))?.triggers;
+      triggers = (await this.communityModel.findOne({ chatId: targetChatId }, { triggers: 1 }))?.triggers;
     } catch (err) {
       this.logger.error(err);
     }
@@ -99,7 +86,7 @@ export class ReactionHandlerService {
     let communityUser;
     try {
       communityUser = await this.communityUserModel.findOneAndUpdate(
-        { chatId: message.chatId, userId: message.creatorUserId },
+        { chatId: targetChatId, userId: message.creatorUserId },
         { $inc: { points: triggers.reaction.points } },
       );
     } catch (error) {
@@ -110,7 +97,7 @@ export class ReactionHandlerService {
       try {
         await this.communityUserHistoryModel.create({
           communityUserId: communityUser._id,
-          data: new MessageReactionData(message._id, message.chatId, triggers.reaction.points),
+          data: new MessageReactionData(message._id, targetChatId, triggers.reaction.points),
         });
       } catch (error) {
         this.logger.error('Error while adding userHistory record', error);

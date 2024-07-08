@@ -17,45 +17,51 @@ export class MessageHandlerService {
     private readonly communityUserService: CommunityUserService,
   ) {}
 
-  async handle(update: NarrowedContext<Context<Update>, Update.MessageUpdate>) {
-    this.logger.log(update.update);
-    if (update.update.message.hasOwnProperty('migrate_to_chat_id')) {
-      const newChatId = (update.update.message as any).migrate_to_chat_id;
-      const oldChatId = update.update.message.chat.id;
+  async handle(ctx: NarrowedContext<Context<Update>, Update.MessageUpdate>) {
+    this.logger.log(ctx.update);
+    if (ctx.update.message.hasOwnProperty('migrate_to_chat_id')) {
+      const newChatId = (ctx.update.message as any).migrate_to_chat_id;
+      const oldChatId = ctx.update.message.chat.id;
       this.logger.log(`We are going to update community id from ${oldChatId} to ${newChatId}`);
       if (newChatId !== undefined && oldChatId !== undefined) {
         this.communityService.updateCommunityId(oldChatId, newChatId);
         this.communityUserService.updateCommunityUserId(oldChatId, newChatId);
       }
       return;
-    } else if (update.update.message.hasOwnProperty('group_chat_created')) {
+    } else if (ctx.update.message.hasOwnProperty('group_chat_created')) {
       // When user first time creates a chat with bot, the bot will recieve message with group_chat_created: true, property.
       // But in this case we will try to add user also by my_chat_member event. Because of it we may face race condition
       // This condition used to prevent this case of race condition
       this.logger.log('Received group chat created message');
       return;
-    } else if (update.update.message.hasOwnProperty('migrate_from_chat_id')) {
+    } else if (ctx.update.message.hasOwnProperty('migrate_from_chat_id')) {
       // It could be also the case for race condition
       this.logger.log('Recieved migrate_from_chat_id message');
       return;
-    } else if (update.update.message.hasOwnProperty('new_chat_participant')) {
+    } else if (ctx.update.message.hasOwnProperty('new_chat_participant')) {
       // Presumably this kind of message is causing race condition and two records using findOneAndUpdate and updateOne with upsert are created
       this.logger.log('Recieve new_chat_participant message');
       return;
-    } else if (update.chat.type === 'private') {
+    } else if (ctx.chat.type === 'private') {
       this.logger.log('Skipping processing because chat type is private');
       return;
     }
 
+    let forwardedFromChatId;
+    if (ctx.update.message.hasOwnProperty('reply_to_message')) {
+      const anyMessage = ctx.update.message as any;
+      forwardedFromChatId = anyMessage?.reply_to_message?.forward_from_chat?.id;
+    }
+    this.logger.log(`The sender chat is ${ctx.update.message.sender_chat} forwarded ${forwardedFromChatId}`);
+
     const message = await this.msgModel.create({
-      chatId: update.message.chat.id,
-      messageId: update.message.message_id,
-      creatorUserId: update.message.from.id,
-      creatorUserName: update.message.from.username,
-      creatorFirstName: update.message.from.first_name,
+      chatId: ctx.message.chat.id,
+      forwardedFromChatId: forwardedFromChatId,
+      messageId: ctx.message.message_id,
+      creatorUserId: ctx.message.from.id,
     });
-    this.communityService.increaseMessageCounter(update.message.chat.id);
-    this.createCommunityUserIfNotExist(update.message.from.id, update.message.chat.id, update.telegram);
+    this.communityService.increaseMessageCounter(ctx.message.chat.id);
+    this.createCommunityUserIfNotExist(ctx.message.from.id, ctx.message.chat.id, ctx.telegram);
     this.logger.log('Message in DB:', JSON.stringify(message));
   }
 
