@@ -10,6 +10,7 @@ import { Message } from 'src/data/message.entity';
 import { TelegramService } from 'src/telegram/telegram.service';
 import { CommunityDto } from './dto/CommunityDto';
 import { DownloaderService } from 'src/util/downloader/downloader.service';
+import { DeleteResult } from 'mongodb';
 
 @Injectable()
 export class CommunityService {
@@ -97,6 +98,7 @@ export class CommunityService {
         },
         { upsert: true, projection: { _id: 1 }, new: true }, // create a new document if no documents match the filter
       );
+      this.logger.log(`Added or updated community with id ${chatId}`);
       const imageFilename = `${response._id.toHexString()}.png`;
       const downloadPath = join(PUBLIC_FS_COMMUNITY_AVATAR_DIRECTORY, imageFilename);
       const avatarUrl = this.serverOrigin + join(PUBLIC_COMMUNITY_AVATAR_ENDPOINT, imageFilename);
@@ -120,5 +122,9 @@ export class CommunityService {
 
   async updateInviteLink(chatId: number, inviteLink: string) {
     return await this.communityModel.updateOne({ chatId }, { inviteLink });
+  }
+
+  async deleteCommunity(chatId: number): Promise<DeleteResult> {
+    return await this.communityModel.deleteOne({ chatId: chatId });
   }
 }

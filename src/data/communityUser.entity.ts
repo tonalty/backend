@@ -19,4 +19,4 @@ export class CommunityUser {
 }
 
 export const CommunityUserSchema = SchemaFactory.createForClass(CommunityUser);
-CommunityUserSchema.index({ userId: 1, chatId: 1 });
+CommunityUserSchema.index({ userId: 1, chatId: 1 }, { unique: true });

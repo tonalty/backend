@@ -3,9 +3,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { DeleteResult } from 'mongodb';
 import { Model, Types } from 'mongoose';
 import { CommunityUser } from 'src/data/communityUser.entity';
+import { ChatMember } from 'telegraf/typings/core/types/typegram';
 import { CommunityService } from './community.service';
 import { CommunityUserDto } from './dto/CommunityUserDto';
-import { ChatMember } from 'telegraf/typings/core/types/typegram';
 
 @Injectable()
 export class CommunityUserService {
@@ -67,6 +67,10 @@ export class CommunityUserService {
     const result = await this.communityUserModel.deleteOne({ chatId, userId });
     this.communityService.decreaseMemberCounter(chatId);
     return result;
+  }
+
+  async deleteAllCommunityUserWithChatId(chatId: number): Promise<DeleteResult> {
+    return await this.communityUserModel.deleteMany({ chatId });
   }
 
   async createOrUpdateCommunityUser(userId: number, chatId: number, isAdmin: boolean): Promise<CommunityUserDto> {

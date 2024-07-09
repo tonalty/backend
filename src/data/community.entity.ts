@@ -36,7 +36,7 @@ export interface ITriggers {
 
 @Schema()
 export class Community {
-  @Prop({ required: true, index: true })
+  @Prop({ required: true, index: true, unique: true })
   chatId: number;
 
   @Prop()

@@ -60,8 +60,6 @@ export class ReactionHandlerService {
       this.logger.error(err);
     }
 
-    this.logger.log('makeReward triggers', triggers);
-
     if (!triggers) {
       throw new Error('No triggers recieved');
     }
@@ -71,7 +69,7 @@ export class ReactionHandlerService {
     }
 
     try {
-      await this.messageModel.updateOne(
+      const result = await this.messageModel.updateOne(
         {
           _id: message._id,
         },
@@ -79,6 +77,9 @@ export class ReactionHandlerService {
           $set: { points: triggers.reaction.points },
         },
       );
+      if (result.modifiedCount === 1) {
+        this.logger.log(`Added ${triggers.reaction.points} points for message ${message._id}`);
+      }
     } catch (error) {
       this.logger.error('Error while saving user after threshold', error);
     }
@@ -103,6 +104,5 @@ export class ReactionHandlerService {
         this.logger.error('Error while adding userHistory record', error);
       }
     }
-    // need to substruct remaining points for community here
   }
 }

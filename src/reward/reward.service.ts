@@ -83,7 +83,11 @@ export class RewardService {
   }
 
   async getRewards(userId: number, chatId: number, limit: number, offset: number): Promise<Array<RewardPreview>> {
-    await this.communityUserService.validateCommunityUserPresent(userId, chatId);
+    const communityUser = await this.communityUserService.getCommunityUser(userId, chatId);
+    if (!communityUser) {
+      this.logger.log(`Unable to find community ${chatId} user ${userId} for reward`);
+      return [];
+    }
     const rewards = await this.rewardModel.find(
       { chatId: chatId },
       { _id: 1, chatId: 1, imageUrl: 1, title: 1, value: 1 },

@@ -1,48 +1,36 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
-import { DeleteResult } from 'mongodb';
 import { Model } from 'mongoose';
+import { PUBLIC_FS_DIRECTORY } from 'src/app.module';
 import { CommunityService } from 'src/communities/community.service';
-import { Community, ReactionTrigger, ReferralTrigger, Triggers } from 'src/data/community.entity';
+import { CommunityUserService } from 'src/communities/communityUser.service';
+import { ReactionTrigger, ReferralTrigger, Triggers } from 'src/data/community.entity';
 import { CommunityUser } from 'src/data/communityUser.entity';
+import { START_BOT_DESCRIPTION } from 'src/globals';
 import { ReferralsService } from 'src/referrals/referrals.service';
+import { Input } from 'telegraf';
 import Context, { NarrowedContext } from 'telegraf/typings/context';
 import { Chat, Update } from 'telegraf/typings/core/types/typegram';
-import { AbstractChatMemberHandler } from './abstractChatMemberHandler.service';
-import { PUBLIC_FS_DIRECTORY } from 'src/app.module';
-import { Input } from 'telegraf';
-import { START_BOT_DESCRIPTION } from 'src/globals';
 
 @Injectable()
-export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
+export class MyChatMemberHandlerService {
+  protected readonly logger = new Logger(MyChatMemberHandlerService.name);
   private readonly botName;
   private readonly webAppName;
 
   constructor(
     @InjectModel(CommunityUser.name) protected communityUserModel: Model<CommunityUser>,
-    @InjectModel(Community.name) protected communityModel: Model<Community>,
     private readonly referralService: ReferralsService,
     private readonly configService: ConfigService,
-    communityService: CommunityService,
+    private readonly communityService: CommunityService,
+    private readonly communityUserService: CommunityUserService,
   ) {
-    super(communityModel, communityUserModel, communityService);
-
     this.botName = this.configService.getOrThrow('BOT_NAME');
     this.webAppName = this.configService.getOrThrow('WEB_APP_NAME');
   }
 
-  private async deleteCommunityUser(chatId: number): Promise<DeleteResult> {
-    return await this.communityUserModel.deleteOne({ chatId });
-  }
-
-  private async deleteCommunity(chatId: number): Promise<DeleteResult> {
-    return await this.communityModel.deleteOne({ chatId: chatId });
-  }
-
   async handle(update: NarrowedContext<Context<Update>, Update.MyChatMemberUpdate>) {
-    this.logger.log('update.myChatMember.new_chat_member', update.myChatMember.new_chat_member);
-    this.logger.log('update.myChatMember.new_chat_member.status', update.myChatMember.new_chat_member.status);
     this.logger.log(update.update);
 
     // TODO: check this when we change settings of the chat from private to public
@@ -51,28 +39,29 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
 
       return;
     }
+    const newBotStatus = update.myChatMember.new_chat_member.status;
+    const oldBotStatus = update.myChatMember.old_chat_member.status;
 
-    if (
-      update.myChatMember.new_chat_member.status === 'administrator' &&
-      update.myChatMember.old_chat_member.status === 'left'
-    ) {
+    if (newBotStatus === 'administrator' && (oldBotStatus === 'left' || oldBotStatus === 'kicked')) {
       await this.handleBotAddedToChatAsAdmin(update);
-    } else if (
-      update.myChatMember.new_chat_member.status === 'administrator' &&
-      update.myChatMember.old_chat_member.status !== 'left'
-    ) {
-      // bot promoted to administrator
-      await this.updateInviteLink(update.myChatMember.chat.id);
-    } else if (
-      update.myChatMember.old_chat_member.status !== 'administrator' &&
-      update.myChatMember.old_chat_member.status === 'left'
-    ) {
+    } else if (newBotStatus === 'administrator' && oldBotStatus !== 'left' && oldBotStatus !== 'kicked') {
+      await this.handleBotPromotedToAdministrator(update.myChatMember.chat.id);
+    } else if (newBotStatus !== 'administrator' && (oldBotStatus === 'left' || oldBotStatus === 'kicked')) {
       await this.handleBotAddedToChatAsNotAdmin(update);
-    } else if (update.myChatMember.new_chat_member.status === 'left') {
-      // in case bot is deleted we delete community also
-      await this.deleteCommunity(update.myChatMember.chat.id);
-      await this.deleteCommunityUser(update.myChatMember.chat.id);
+    } else if (newBotStatus === 'left' || newBotStatus === 'kicked') {
+      await this.handleBotDeletedFromCommunity(update.myChatMember.chat.id);
     }
+  }
+
+  private async handleBotPromotedToAdministrator(chatId: number) {
+    this.logger.log(`Handle bot promoted to administator in ${chatId}`);
+    await this.updateInviteLink(chatId);
+  }
+
+  private async handleBotDeletedFromCommunity(chatId: number) {
+    this.logger.log(`Handle bot deleted from community ${chatId}`);
+    await this.communityService.deleteCommunity(chatId);
+    await this.communityUserService.deleteAllCommunityUserWithChatId(chatId);
   }
 
   private async getChatMembersCount(
@@ -87,6 +76,7 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
   }
 
   private async handleBotAddedToChatAsNotAdmin(update: NarrowedContext<Context<Update>, Update.MyChatMemberUpdate>) {
+    this.logger.log(`Handle bot added to chat ${update.myChatMember.chat.id} as not admin`);
     const chatInfo = await update.getChat();
     // TODO: Get chat title from update message
     const title = (chatInfo as Chat.GroupGetChat).title;
@@ -106,13 +96,12 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
       undefined,
     );
 
-    await this.createCommunityUserIfNotExist1(update.myChatMember.chat.id, update.myChatMember.from.id, title, false);
-
     await update.sendMessage(`https://t.me/${this.botName}/${this.webAppName}`);
 
     await this.sendCommunityLink(update);
   }
   private async handleBotAddedToChatAsAdmin(update: NarrowedContext<Context<Update>, Update.MyChatMemberUpdate>) {
+    this.logger.log(`Handle bot added to chat ${update.myChatMember.chat.id} as admin`);
     const chatInfo = await update.getChat();
     // TODO: Get chat title from update message
     const title = (chatInfo as Chat.GroupGetChat).title;
@@ -132,8 +121,6 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
       chatMemberCount,
       inviteLink,
     );
-
-    await this.createCommunityUserIfNotExist1(update.myChatMember.chat.id, update.myChatMember.from.id, title, true);
 
     await update.sendMessage(`https://t.me/${this.botName}/${this.webAppName}`);
 

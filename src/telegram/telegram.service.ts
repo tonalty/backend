@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Telegraf } from 'telegraf';
 import { ChatMember } from 'telegraf/typings/core/types/typegram';
@@ -9,13 +9,23 @@ import { MyChatMemberHandlerService } from './myChatMemberHandler.service';
 import { ReactionHandlerService } from './reactionHandler.service';
 
 @Injectable()
-export class TelegramService {
+export class TelegramService implements OnModuleInit {
   private readonly logger = new Logger(TelegramService.name);
   private readonly bot;
+  private botId: number;
 
   constructor(configService: ConfigService) {
     const botToken = configService.getOrThrow('BOT_TOKEN');
     this.bot = new Telegraf(botToken);
+  }
+
+  async onModuleInit() {
+    const response = await this.bot.telegram.getMe();
+    this.botId = response.id;
+  }
+
+  getBotId() {
+    return this.botId;
   }
 
   registerMessageReactionHandler(reactionHandlerService: ReactionHandlerService) {
@@ -41,7 +51,6 @@ export class TelegramService {
   registerChatMemberHandler(chatMemberHandlerService: ChatMemberHandlerService) {
     this.bot.on('chat_member', async (update) => {
       try {
-        this.logger.log('-------------chat_member-------------', JSON.stringify(update));
         await chatMemberHandlerService.handle(update);
       } catch (error) {
         this.logger.error('Error while adding new chat member joinned the group. ', error);
@@ -52,7 +61,6 @@ export class TelegramService {
   registerMyChatMemberHandler(myChatMemberHandlerService: MyChatMemberHandlerService) {
     this.bot.on('my_chat_member', async (update) => {
       try {
-        this.logger.log('-------------my_chat_member-------------', JSON.stringify(update));
         await myChatMemberHandlerService.handle(update);
       } catch (error) {
         this.logger.error('Error while adding new chat member joinned the group. ', error);

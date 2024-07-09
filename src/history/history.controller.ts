@@ -26,8 +26,10 @@ export class HistoryController {
     const userId = this.tmaService.getUserId(tmaInitData);
     const communityUser = await this.communityUserService.getCommunityUser(userId, chatId);
     if (!communityUser) {
-      throw new NotFoundException('Unable to find user');
+      this.logger.log(`Unable to find community ${chatId} user ${userId} to return history`);
+      return [];
+    } else {
+      return this.historyService.getUserHistory(communityUser, limit);
     }
-    return this.historyService.getUserHistory(communityUser, limit);
   }
 }

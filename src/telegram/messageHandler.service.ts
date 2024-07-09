@@ -9,6 +9,7 @@ import { Context, Input, NarrowedContext, Telegram } from 'telegraf';
 import { Update } from 'telegraf/typings/core/types/typegram';
 import { Commands, START_BOT_DESCRIPTION } from 'src/globals';
 import { ConfigService } from '@nestjs/config';
+import { TelegramService } from './telegram.service';
 
 @Injectable()
 export class MessageHandlerService {
@@ -21,6 +22,7 @@ export class MessageHandlerService {
     private readonly communityService: CommunityService,
     private readonly communityUserService: CommunityUserService,
     private readonly configService: ConfigService,
+    private readonly telegramService: TelegramService,
   ) {
     this.botName = this.configService.getOrThrow('BOT_NAME');
     this.webAppName = this.configService.getOrThrow('WEB_APP_NAME');
@@ -28,23 +30,7 @@ export class MessageHandlerService {
 
   async handle(ctx: NarrowedContext<Context<Update>, Update.MessageUpdate>) {
     this.logger.log(ctx.update);
-    if (ctx.text === Commands.START) {
-      this.logger.log('Sending photo from', PUBLIC_FS_DIRECTORY);
-
-      await ctx.sendPhoto(Input.fromLocalFile(`${PUBLIC_FS_DIRECTORY}/BotStart.png`), {
-        caption: START_BOT_DESCRIPTION,
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: 'Open communities',
-                url: `https://t.me/${this.botName}/${this.webAppName}`,
-              },
-            ],
-          ],
-        },
-      });
-    }
+    this.executeCommandFromMessage(ctx);
 
     if (ctx.update.message.hasOwnProperty('migrate_to_chat_id')) {
       const newChatId = (ctx.update.message as any).migrate_to_chat_id;
@@ -67,7 +53,11 @@ export class MessageHandlerService {
       return;
     } else if (ctx.update.message.hasOwnProperty('new_chat_participant')) {
       // Presumably this kind of message is causing race condition and two records using findOneAndUpdate and updateOne with upsert are created
-      this.logger.log('Recieve new_chat_participant message');
+      this.logger.log('Recieved new_chat_participant message');
+      return;
+    } else if (ctx.update.message.hasOwnProperty('left_chat_participant')) {
+      // This message sent when bot or some other chat member removed. As we registered to chat_member and my_chat_member it is now not needed
+      this.logger.log('Recieved left_chat_participant message');
       return;
     } else if (ctx.chat.type === 'private') {
       this.logger.log('Skipping processing because chat type is private');
@@ -76,10 +66,17 @@ export class MessageHandlerService {
 
     let forwardedFromChatId;
     if (ctx.update.message.hasOwnProperty('reply_to_message')) {
+      // Handle channel post reply
       const anyMessage = ctx.update.message as any;
       forwardedFromChatId = anyMessage?.reply_to_message?.forward_from_chat?.id;
+    } else if (ctx.update.message.hasOwnProperty('forward_from_chat')) {
+      // Handle channel post
+      const anyMessage = ctx.update.message as any;
+      forwardedFromChatId = anyMessage?.forward_from_chat?.id;
+      this.logger.log(`Recieved channel ${forwardedFromChatId} post message. Discard it for now`);
+      return;
     }
-    this.logger.log(`The sender chat is ${ctx.update.message.sender_chat} forwarded ${forwardedFromChatId}`);
+    this.logger.log(`The sender chat is ${ctx.update.message.chat.id} forwarded ${forwardedFromChatId}`);
 
     const message = await this.msgModel.create({
       chatId: ctx.message.chat.id,
@@ -110,6 +107,26 @@ export class MessageHandlerService {
       await this.communityUserService.createOrUpdateCommunityUser(userId, chatId, isAdmin);
     } catch (error) {
       this.logger.log(error);
+    }
+  }
+
+  private async executeCommandFromMessage(ctx: NarrowedContext<Context<Update>, Update.MessageUpdate>) {
+    if (ctx.text === Commands.START) {
+      this.logger.log('Sending photo from', PUBLIC_FS_DIRECTORY);
+
+      await ctx.sendPhoto(Input.fromLocalFile(`${PUBLIC_FS_DIRECTORY}/BotStart.png`), {
+        caption: START_BOT_DESCRIPTION,
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: 'Open communities',
+                url: `https://t.me/${this.botName}/${this.webAppName}`,
+              },
+            ],
+          ],
+        },
+      });
     }
   }
 }
