@@ -1,24 +1,51 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { PUBLIC_FS_DIRECTORY } from 'src/app.module';
 import { CommunityService } from 'src/communities/community.service';
 import { CommunityUserService } from 'src/communities/communityUser.service';
 import { Message } from 'src/data/message.entity';
-import { Context, NarrowedContext, Telegram } from 'telegraf';
+import { Context, Input, NarrowedContext, Telegram } from 'telegraf';
 import { Update } from 'telegraf/typings/core/types/typegram';
+import { Commands, START_BOT_DESCRIPTION } from 'src/globals';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class MessageHandlerService {
   private readonly logger = new Logger(MessageHandlerService.name);
+  private readonly botName: string;
+  private readonly webAppName: string;
 
   constructor(
     @InjectModel(Message.name) private msgModel: Model<Message>,
     private readonly communityService: CommunityService,
     private readonly communityUserService: CommunityUserService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    this.botName = this.configService.getOrThrow('BOT_NAME');
+    this.webAppName = this.configService.getOrThrow('WEB_APP_NAME');
+  }
 
   async handle(ctx: NarrowedContext<Context<Update>, Update.MessageUpdate>) {
     this.logger.log(ctx.update);
+    if (ctx.text === Commands.START) {
+      this.logger.log('Sending photo from', PUBLIC_FS_DIRECTORY);
+
+      await ctx.sendPhoto(Input.fromLocalFile(`${PUBLIC_FS_DIRECTORY}/BotStart.png`), {
+        caption: START_BOT_DESCRIPTION,
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: 'Open communities',
+                url: `https://t.me/${this.botName}/${this.webAppName}`,
+              },
+            ],
+          ],
+        },
+      });
+    }
+
     if (ctx.update.message.hasOwnProperty('migrate_to_chat_id')) {
       const newChatId = (ctx.update.message as any).migrate_to_chat_id;
       const oldChatId = ctx.update.message.chat.id;
