@@ -12,6 +12,7 @@ import { Chat, Update } from 'telegraf/typings/core/types/typegram';
 import { AbstractChatMemberHandler } from './abstractChatMemberHandler.service';
 import { PUBLIC_FS_DIRECTORY } from 'src/app.module';
 import { Input } from 'telegraf';
+import { START_BOT_DESCRIPTION } from 'src/globals';
 
 @Injectable()
 export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
@@ -144,7 +145,7 @@ export class MyChatMemberHandlerService extends AbstractChatMemberHandler {
       this.logger.log('Sending photo from', PUBLIC_FS_DIRECTORY);
 
       await update.sendPhoto(Input.fromLocalFile(`${PUBLIC_FS_DIRECTORY}/BotStart.png`), {
-        caption: `Tonality is a point reward system that adds value to customer brand interactions.\n\n• Encourage targeted actions\n\n• No technical expertise required, manage via Telegram bot\n\n• Explore new ways to engage`,
+        caption: START_BOT_DESCRIPTION,
         reply_markup: {
           inline_keyboard: [
             [
