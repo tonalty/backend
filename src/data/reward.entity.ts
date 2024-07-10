@@ -19,6 +19,9 @@ export class Reward {
 
   @Prop({ required: true })
   rewardMessage: string;
+
+  @Prop({ required: true })
+  canBeUsedTimes: number = 1;
 }
 
 export const RewardSchema = SchemaFactory.createForClass(Reward);

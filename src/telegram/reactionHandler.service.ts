@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CommunityService } from 'src/communities/community.service';
-import { Community } from 'src/data/community.entity';
 import { CommunityUser } from 'src/data/communityUser.entity';
 import { CommunityUserHistory, MessageReactionData } from 'src/data/communityUserHistory.entity';
 import { Message } from 'src/data/message.entity';
@@ -16,7 +15,6 @@ export class ReactionHandlerService {
 
   constructor(
     @InjectModel(Message.name) private messageModel: Model<Message>,
-    @InjectModel(Community.name) private communityModel: Model<Community>,
     @InjectModel(CommunityUser.name) private communityUserModel: Model<CommunityUser>,
     @InjectModel(CommunityUserHistory.name) private communityUserHistoryModel: Model<CommunityUserHistory>,
     private readonly communityService: CommunityService,
@@ -55,7 +53,7 @@ export class ReactionHandlerService {
     let triggers;
     const targetChatId = message.forwardedFromChatId ?? message.chatId;
     try {
-      triggers = (await this.communityModel.findOne({ chatId: targetChatId }, { triggers: 1 }))?.triggers;
+      triggers = (await this.communityService.getCommunity(targetChatId)).triggers;
     } catch (err) {
       this.logger.error(err);
     }

@@ -9,6 +9,7 @@ export class CommunityDto {
   members: number;
   comments: number;
   reactions: number;
+  type: string;
   photoLink?: string;
 
   constructor(community: Community) {
@@ -23,5 +24,6 @@ export class CommunityDto {
     this.comments = community.comments;
     this.reactions = community.reactions;
     this.photoLink = community.photoLink;
+    this.type = community.type ?? 'unknown';
   }
 }

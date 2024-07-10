@@ -90,6 +90,7 @@ export class MyChatMemberHandlerService {
 
     await this.communityService.createOrUpdateCommunity(
       update.myChatMember.chat.id,
+      update.chat.type,
       title,
       triggers,
       chatMemberCount,
@@ -116,6 +117,7 @@ export class MyChatMemberHandlerService {
     const inviteLink = await this.referralService.generateInviteLink(chatInfo.id);
     await this.communityService.createOrUpdateCommunity(
       update.myChatMember.chat.id,
+      update.chat.type,
       title,
       triggers,
       chatMemberCount,

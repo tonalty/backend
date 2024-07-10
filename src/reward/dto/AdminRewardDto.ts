@@ -7,6 +7,7 @@ export class AdminRewardDto {
   value: number;
   description: string;
   rewardMessage: string;
+  canBeUsedTimes: number;
 
   constructor(reward: Reward & { _id: Types.ObjectId }) {
     this.imageUrl = reward.imageUrl;
@@ -14,5 +15,6 @@ export class AdminRewardDto {
     this.value = reward.value;
     this.description = reward.description;
     this.rewardMessage = reward.rewardMessage;
+    this.canBeUsedTimes = reward.canBeUsedTimes;
   }
 }

@@ -74,6 +74,7 @@ export class CommunityService {
 
   async createOrUpdateCommunity(
     chatId: number,
+    chatType: string,
     title: string,
     triggers: Triggers,
     chatMemberCount: number,
@@ -91,6 +92,7 @@ export class CommunityService {
             comments: 0,
             reactions: 0,
             inviteLink,
+            type: chatType,
           },
           $set: {
             members: chatMemberCount,

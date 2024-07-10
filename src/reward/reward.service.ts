@@ -1,17 +1,16 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotAcceptableException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { CommunityService } from 'src/communities/community.service';
+import { CommunityUserService } from 'src/communities/communityUser.service';
 import { Reward } from 'src/data/reward.entity';
 import { HistoryService } from 'src/history/history.service';
 import { TempImageService } from 'src/temp/image/image.service';
 import { AdminRewardDto } from './dto/AdminRewardDto';
+import { BuyRewardResponseDto } from './dto/BuyRewardResponseDto';
 import { CreateRewardDto } from './dto/CreateRewardDto';
 import { RewardPreview } from './dto/RewardPreviewDto';
 import { UpdateRewardDto } from './dto/UpdateRewardDto';
 import { UserRewardDto } from './dto/UserRewardDto';
-import { CommunityUserService } from 'src/communities/communityUser.service';
-import { BuyRewardResponseDto } from './dto/BuyRewardResponseDto';
 
 @Injectable()
 export class RewardService {
@@ -20,12 +19,14 @@ export class RewardService {
   constructor(
     @InjectModel(Reward.name) private readonly rewardModel: Model<Reward>,
     private readonly tempImageService: TempImageService,
-    private readonly communitiesService: CommunityService,
     private readonly communityUserService: CommunityUserService,
     private readonly historyService: HistoryService,
   ) {}
 
   async createReward(userId: number, rewardDto: CreateRewardDto): Promise<AdminRewardDto> {
+    if (rewardDto.canBeUsedTimes === 0) {
+      throw new NotAcceptableException('canBeUsedTimes cannot be equal to zero');
+    }
     await this.communityUserService.validateUserIsAdmin(userId, rewardDto.chatId);
     const rewardId = new Types.ObjectId();
     const imagePublicPath = await this.tempImageService.saveImageToPermanent(rewardDto.imageId, rewardId.toHexString());
@@ -89,7 +90,7 @@ export class RewardService {
       return [];
     }
     const rewards = await this.rewardModel.find(
-      { chatId: chatId },
+      { chatId: chatId, canBeUsedTimes: { $ne: 0 } },
       { _id: 1, chatId: 1, imageUrl: 1, title: 1, value: 1 },
       { m: limit, skip: offset },
     );
@@ -111,12 +112,49 @@ export class RewardService {
   }
 
   async buyReward(rewardId: string, chatId: number, userId: number): Promise<BuyRewardResponseDto> {
-    const reward = await this.rewardModel.findOne({ _id: new Types.ObjectId(rewardId), chatId: chatId });
+    const reward = await this.rewardModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(rewardId), chatId: chatId, canBeUsedTimes: { $ne: 0 } },
+      [
+        {
+          $set: {
+            canBeUsedTimes: {
+              $cond: {
+                if: {
+                  $gt: ['$canBeUsedTimes', 0],
+                },
+                then: {
+                  $subtract: ['$canBeUsedTimes', 1],
+                },
+                else: '$canBeUsedTimes',
+              },
+            },
+          },
+        },
+      ],
+      { new: true },
+    );
     if (!reward) {
       throw new NotFoundException(`Unable to find reward by id ${rewardId} in chat ${chatId}`);
     }
     const result = await this.communityUserService.decreaseCommunityUserPoints(userId, chatId, reward.value);
     if (!result) {
+      await this.rewardModel.updateOne({ _id: new Types.ObjectId(rewardId), chatId: chatId }, [
+        {
+          $set: {
+            canBeUsedTimes: {
+              $cond: {
+                if: {
+                  $gte: ['$canBeUsedTimes', 0],
+                },
+                then: {
+                  $add: ['$canBeUsedTimes', 1],
+                },
+                else: '$canBeUsedTimes',
+              },
+            },
+          },
+        },
+      ]);
       throw new BadRequestException('Unable to decrease points');
     }
     this.historyService.createRewardBuyRecord(result, reward);
