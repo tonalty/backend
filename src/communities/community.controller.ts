@@ -1,11 +1,11 @@
 import { Controller, Get, Headers, Logger, NotFoundException, Param } from '@nestjs/common';
-import { CommunityService } from './community.service';
+import { TelegramService } from 'src/telegram/telegram.service';
 import { TmaService } from 'src/tma/tma.service';
-import { CommunityUser } from 'src/data/communityUser.entity';
+import { CommunityService } from './community.service';
 import { CommunityUserService } from './communityUser.service';
 import { CommunityDto } from './dto/CommunityDto';
-import { TelegramService } from 'src/telegram/telegram.service';
 import { CommunityUserDto } from './dto/CommunityUserDto';
+import { CommunityUserWithChatPhotoLinkDto } from './dto/CommunityUserWithChatPhotoLinkDto';
 
 @Controller('community')
 export class CommunityController {
@@ -19,14 +19,14 @@ export class CommunityController {
   ) {}
 
   @Get('admin-user')
-  getAdminCommunities(@Headers('tmaInitData') tmaInitData: string): Promise<Array<CommunityUser>> {
+  getAdminCommunities(@Headers('tmaInitData') tmaInitData: string): Promise<Array<CommunityUserWithChatPhotoLinkDto>> {
     this.logger.log('getAdminCommunities', JSON.stringify(tmaInitData));
 
     return this.communityUserService.getAdminCommunities(this.tmaService.getUserId(tmaInitData));
   }
 
   @Get('user')
-  getAllCommunities(@Headers('tmaInitData') tmaInitData: string) {
+  getAllCommunities(@Headers('tmaInitData') tmaInitData: string): Promise<Array<CommunityUserWithChatPhotoLinkDto>> {
     this.logger.log('getAllCommunities', JSON.stringify(tmaInitData));
 
     try {

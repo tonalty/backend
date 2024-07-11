@@ -6,6 +6,7 @@ import { CommunityUser } from 'src/data/communityUser.entity';
 import { ChatMember } from 'telegraf/typings/core/types/typegram';
 import { CommunityService } from './community.service';
 import { CommunityUserDto } from './dto/CommunityUserDto';
+import { CommunityUserWithChatPhotoLinkDto } from './dto/CommunityUserWithChatPhotoLinkDto';
 
 @Injectable()
 export class CommunityUserService {
@@ -16,12 +17,46 @@ export class CommunityUserService {
     private readonly communityService: CommunityService,
   ) {}
 
-  getAdminCommunities(userId: number): Promise<CommunityUser[]> {
-    return this.communityUserModel.find({ userId: userId, isAdmin: true }).sort({ createdAt: -1 });
+  async getAdminCommunities(userId: number): Promise<CommunityUserWithChatPhotoLinkDto[]> {
+    const communityUserAndCommunity = await this.communityUserModel
+      .aggregate([
+        {
+          $match: { userId: userId, isAdmin: true },
+        },
+        {
+          $lookup: {
+            from: 'communities',
+            localField: 'chatId',
+            foreignField: 'chatId',
+            as: 'community',
+          },
+        },
+      ])
+      .sort({ createdAt: -1 });
+    return communityUserAndCommunity.map(
+      (entity) => new CommunityUserWithChatPhotoLinkDto(entity, entity.community[0]),
+    );
   }
 
-  getAllCommunities(userId: number) {
-    return this.communityUserModel.find({ userId: userId }).sort({ createdAt: -1 });
+  async getAllCommunities(userId: number): Promise<CommunityUserWithChatPhotoLinkDto[]> {
+    const communityUserAndCommunity = await this.communityUserModel
+      .aggregate([
+        {
+          $match: { userId: userId },
+        },
+        {
+          $lookup: {
+            from: 'communities',
+            localField: 'chatId',
+            foreignField: 'chatId',
+            as: 'community',
+          },
+        },
+      ])
+      .sort({ createdAt: -1 });
+    return communityUserAndCommunity.map(
+      (entity) => new CommunityUserWithChatPhotoLinkDto(entity, entity.community[0]),
+    );
   }
 
   getCommunityUser(userId: number, chatId: number): Promise<(CommunityUser & { _id: Types.ObjectId }) | null> {
