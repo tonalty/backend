@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { join } from 'path';
 import { PUBLIC_COMMUNITY_AVATAR_ENDPOINT, PUBLIC_FS_COMMUNITY_AVATAR_DIRECTORY } from 'src/app.module';
-import { Community, Triggers } from 'src/data/community.entity';
+import { Community, Settings, Triggers } from 'src/data/community.entity';
 import { CommunityUser } from 'src/data/communityUser.entity';
 import { Message } from 'src/data/message.entity';
 import { TelegramService } from 'src/telegram/telegram.service';
@@ -77,6 +77,7 @@ export class CommunityService {
     chatType: string,
     title: string,
     triggers: Triggers,
+    settings: Settings,
     chatMemberCount: number,
     inviteLink?: string,
   ) {
@@ -89,6 +90,7 @@ export class CommunityService {
             chatId: chatId,
             title: title ?? `private-${chatId}`,
             triggers,
+            settings,
             comments: 0,
             reactions: 0,
             inviteLink,

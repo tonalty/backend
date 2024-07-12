@@ -23,6 +23,7 @@ import { MyChatMemberHandlerService } from './telegram/myChatMemberHandler.servi
 import { TelegramService } from './telegram/telegram.service';
 import { APP_FILTER } from '@nestjs/core';
 import { AllExceptionsFilter } from './util/exception/AllExceptionFilter';
+import { SettingsModule } from './settings/service.module';
 
 export const PUBLIC_FS_DIRECTORY = join(__dirname, '..', 'public');
 export const PUBLIC_FS_IMAGE_DIRECTORY = join(PUBLIC_FS_DIRECTORY, 'image');
@@ -46,6 +47,7 @@ export const PUBLIC_COMMUNITY_AVATAR_ENDPOINT = join(PUBLIC_ENDPOINT, 'community
     ReferralsModule,
     HistoryModule,
     TriggersModule,
+    SettingsModule,
     RewardModule,
     ServeStaticModule.forRoot({
       rootPath: PUBLIC_FS_DIRECTORY,

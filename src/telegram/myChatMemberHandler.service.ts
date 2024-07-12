@@ -5,7 +5,7 @@ import { Model } from 'mongoose';
 import { PUBLIC_FS_DIRECTORY } from 'src/app.module';
 import { CommunityService } from 'src/communities/community.service';
 import { CommunityUserService } from 'src/communities/communityUser.service';
-import { ReactionTrigger, ReferralTrigger, Triggers } from 'src/data/community.entity';
+import { ReactionTrigger, ReferralTrigger, Settings, Triggers } from 'src/data/community.entity';
 import { CommunityUser } from 'src/data/communityUser.entity';
 import { START_BOT_DESCRIPTION } from 'src/globals';
 import { ReferralsService } from 'src/referrals/referrals.service';
@@ -86,6 +86,10 @@ export class MyChatMemberHandlerService {
       referral: new ReferralTrigger(0, 0, false),
     };
 
+    const settings: Settings = {
+      isTonConnectWallet: false,
+    };
+
     const chatMemberCount = await this.getChatMembersCount(update);
 
     await this.communityService.createOrUpdateCommunity(
@@ -93,6 +97,7 @@ export class MyChatMemberHandlerService {
       update.chat.type,
       title,
       triggers,
+      settings,
       chatMemberCount,
       undefined,
     );
@@ -112,6 +117,10 @@ export class MyChatMemberHandlerService {
       referral: new ReferralTrigger(0, 0, false),
     };
 
+    const settings: Settings = {
+      isTonConnectWallet: false,
+    };
+
     const chatMemberCount = await this.getChatMembersCount(update);
 
     const inviteLink = await this.referralService.generateInviteLink(chatInfo.id);
@@ -120,6 +129,7 @@ export class MyChatMemberHandlerService {
       update.chat.type,
       title,
       triggers,
+      settings,
       chatMemberCount,
       inviteLink,
     );

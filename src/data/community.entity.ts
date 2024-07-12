@@ -61,6 +61,11 @@ export class Community {
     reaction: ReactionTrigger;
   };
 
+  @Prop({ type: mongoose.Schema.Types.Mixed })
+  settings: {
+    isTonConnectWallet: boolean;
+  };
+
   @Prop()
   members: number;
 
@@ -83,4 +88,8 @@ export class Community {
 export interface Triggers {
   referral: ReferralTrigger;
   reaction: ReactionTrigger;
+}
+
+export interface Settings {
+  isTonConnectWallet: boolean;
 }
