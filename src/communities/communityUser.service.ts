@@ -110,27 +110,33 @@ export class CommunityUserService {
 
   async createOrUpdateCommunityUser(userId: number, chatId: number, isAdmin: boolean): Promise<CommunityUserDto> {
     const communityTitle = await this.communityService.getCommunityTitle(chatId);
-    const result = await this.communityUserModel.findOneAndUpdate(
-      { userId: userId, chatId: chatId },
-      {
-        $setOnInsert: {
-          userId: userId,
-          chatId: chatId,
-          communityName: communityTitle,
-          points: 0,
+    const result = await this.communityUserModel
+      .findOneAndUpdate(
+        { userId: userId, chatId: chatId },
+        {
+          $setOnInsert: {
+            userId: userId,
+            chatId: chatId,
+            communityName: communityTitle,
+            points: 0,
+          },
+          $set: {
+            // $set happens if the document is found and if it's not found
+            isAdmin: isAdmin,
+          },
         },
-        $set: {
-          // $set happens if the document is found and if it's not found
-          isAdmin: isAdmin,
+        {
+          upsert: true,
+          new: true,
         },
-      },
-      {
-        upsert: true,
-        new: true,
-      },
-    );
+      )
+      .lean();
+
+    const community = await this.communityService.getCommunity(chatId);
+
     this.logger.log(`Created or updated a new community user. userId: ${userId}, chatId ${chatId}`);
-    return new CommunityUserDto(result);
+
+    return new CommunityUserDto(Object.assign({}, { ...result, photoLink: community.photoLink }));
   }
 
   isChatMemberAdmin(chatMember: ChatMember): boolean {
