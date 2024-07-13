@@ -1,4 +1,4 @@
-import { Controller, Get, Headers, Logger, NotFoundException, Param } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Logger, NotFoundException, Param, Patch } from '@nestjs/common';
 import { TelegramService } from 'src/telegram/telegram.service';
 import { TmaService } from 'src/tma/tma.service';
 import { CommunityService } from './community.service';
@@ -6,6 +6,7 @@ import { CommunityUserService } from './communityUser.service';
 import { CommunityDto } from './dto/CommunityDto';
 import { CommunityUserDto } from './dto/CommunityUserDto';
 import { CommunityUserWithChatPhotoLinkDto } from './dto/CommunityUserWithChatPhotoLinkDto';
+import { IUpdateSettingsDto } from './dto/UpdateSettingsDto';
 
 @Controller('community')
 export class CommunityController {
@@ -61,5 +62,21 @@ export class CommunityController {
     const userId = this.tmaService.getUserId(tmaInitData);
     this.communityUserService.validateCommunityUserPresent(userId, chatId);
     return this.communitiesService.getCommunity(chatId);
+  }
+
+  @Patch('settings')
+  updateTriggers(
+    @Headers('tmaInitData') tmaInitData: string,
+    @Body() UpdateSettingsDto: IUpdateSettingsDto,
+  ): Promise<boolean> {
+    this.logger.log('UpdateSettingsDto', UpdateSettingsDto);
+
+    try {
+      this.tmaService.getUserId(tmaInitData);
+    } catch (error) {
+      throw new Error(error);
+    }
+
+    return this.communitiesService.updateSettings(UpdateSettingsDto);
   }
 }
