@@ -4,13 +4,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { join } from 'path';
 import { PUBLIC_COMMUNITY_AVATAR_ENDPOINT, PUBLIC_FS_COMMUNITY_AVATAR_DIRECTORY } from 'src/app.module';
-import { Community, Triggers } from 'src/data/community.entity';
+import { Community, Settings, Triggers } from 'src/data/community.entity';
 import { CommunityUser } from 'src/data/communityUser.entity';
 import { Message } from 'src/data/message.entity';
 import { TelegramService } from 'src/telegram/telegram.service';
 import { CommunityDto } from './dto/CommunityDto';
 import { DownloaderService } from 'src/util/downloader/downloader.service';
 import { DeleteResult } from 'mongodb';
+import { UpdateSettingsDto } from 'src/communities/dto/UpdateSettingsDto';
 
 @Injectable()
 export class CommunityService {
@@ -77,6 +78,7 @@ export class CommunityService {
     chatType: string,
     title: string,
     triggers: Triggers,
+    settings: Settings,
     chatMemberCount: number,
     inviteLink?: string,
   ) {
@@ -89,6 +91,7 @@ export class CommunityService {
             chatId: chatId,
             title: title ?? `private-${chatId}`,
             triggers,
+            settings,
             comments: 0,
             reactions: 0,
             inviteLink,
@@ -128,5 +131,27 @@ export class CommunityService {
 
   async deleteCommunity(chatId: number): Promise<DeleteResult> {
     return await this.communityModel.deleteOne({ chatId: chatId });
+  }
+
+  async updateSettings(updateSettings: UpdateSettingsDto): Promise<boolean> {
+    try {
+      this.logger.log('updateSettings: ', JSON.stringify(updateSettings));
+      const {
+        settings: { isTonConnectWallet },
+      } = updateSettings;
+
+      const result = await this.communityModel.updateOne(
+        { chatId: updateSettings.chatId },
+        {
+          chatId: updateSettings.chatId,
+          settings: { isTonConnectWallet },
+        },
+        { new: true },
+      );
+
+      return Boolean(result.modifiedCount);
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 }

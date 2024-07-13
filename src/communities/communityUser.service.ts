@@ -136,7 +136,9 @@ export class CommunityUserService {
 
     this.logger.log(`Created or updated a new community user. userId: ${userId}, chatId ${chatId}`);
 
-    return new CommunityUserDto(Object.assign({}, { ...result, photoLink: community.photoLink }));
+    return new CommunityUserDto(
+      Object.assign({}, { ...result, photoLink: community.photoLink, settings: community.settings }),
+    );
   }
 
   isChatMemberAdmin(chatMember: ChatMember): boolean {

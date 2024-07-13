@@ -6,6 +6,9 @@ export class CommunityDto {
     referral: ReferralTrigger;
     reaction: ReactionTrigger;
   };
+  settings: {
+    isTonConnectWallet: boolean;
+  };
   members: number;
   comments: number;
   reactions: number;
@@ -18,6 +21,11 @@ export class CommunityDto {
       this.triggers = {
         referral: community.triggers.referral,
         reaction: community.triggers.reaction,
+      };
+    }
+    if (community.settings) {
+      this.settings = {
+        isTonConnectWallet: community.settings.isTonConnectWallet,
       };
     }
     this.members = community.members;
