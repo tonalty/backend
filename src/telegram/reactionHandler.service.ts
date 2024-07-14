@@ -92,7 +92,7 @@ export class ReactionHandlerService {
       this.logger.error('Error while updating community user table', error);
     }
 
-    if (communityUser) {
+    if (communityUser && triggers.reaction.isEnabled) {
       try {
         await this.communityUserHistoryModel.create({
           communityUserId: communityUser._id,
