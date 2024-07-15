@@ -23,6 +23,7 @@ import { MyChatMemberHandlerService } from './telegram/myChatMemberHandler.servi
 import { TelegramService } from './telegram/telegram.service';
 import { APP_FILTER } from '@nestjs/core';
 import { AllExceptionsFilter } from './util/exception/AllExceptionFilter';
+import { ChannelPostHandlerService } from './telegram/channelPostHandler.service';
 
 export const PUBLIC_FS_DIRECTORY = join(__dirname, '..', 'public');
 export const PUBLIC_FS_IMAGE_DIRECTORY = join(PUBLIC_FS_DIRECTORY, 'image');
@@ -62,6 +63,7 @@ export const PUBLIC_COMMUNITY_AVATAR_ENDPOINT = join(PUBLIC_ENDPOINT, 'community
     ReactionHandlerService,
     ChatMemberHandlerService,
     MyChatMemberHandlerService,
+    ChannelPostHandlerService,
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,

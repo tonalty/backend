@@ -7,6 +7,7 @@ import { ChatMemberHandlerService } from './chatMemberHandler.service';
 import { MessageHandlerService } from './messageHandler.service';
 import { MyChatMemberHandlerService } from './myChatMemberHandler.service';
 import { ReactionHandlerService } from './reactionHandler.service';
+import { ChannelPostHandlerService } from './channelPostHandler.service';
 
 @Injectable()
 export class TelegramService implements OnModuleInit {
@@ -68,6 +69,16 @@ export class TelegramService implements OnModuleInit {
     });
   }
 
+  registerChannelPostHandler(channelPostHandlerService: ChannelPostHandlerService) {
+    this.bot.on('channel_post', async (update) => {
+      try {
+        await channelPostHandlerService.handle(update);
+      } catch (error) {
+        this.logger.error('Error while adding new chat member joinned the group. ', error);
+      }
+    });
+  }
+
   completeHandlerRegistration() {
     this.bot.catch((err) => this.logger.error(err));
 
@@ -79,6 +90,7 @@ export class TelegramService implements OnModuleInit {
         'message',
         'chat_member',
         'my_chat_member',
+        'channel_post',
       ],
     });
   }

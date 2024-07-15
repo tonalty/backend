@@ -1,15 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { PUBLIC_FS_DIRECTORY } from 'src/app.module';
 import { CommunityService } from 'src/communities/community.service';
 import { CommunityUserService } from 'src/communities/communityUser.service';
 import { Message } from 'src/data/message.entity';
+import { Commands, START_BOT_DESCRIPTION } from 'src/globals';
 import { Context, Input, NarrowedContext, Telegram } from 'telegraf';
 import { Update } from 'telegraf/typings/core/types/typegram';
-import { Commands, START_BOT_DESCRIPTION } from 'src/globals';
-import { ConfigService } from '@nestjs/config';
-import { TelegramService } from './telegram.service';
 
 @Injectable()
 export class MessageHandlerService {
@@ -22,7 +21,6 @@ export class MessageHandlerService {
     private readonly communityService: CommunityService,
     private readonly communityUserService: CommunityUserService,
     private readonly configService: ConfigService,
-    private readonly telegramService: TelegramService,
   ) {
     this.botName = this.configService.getOrThrow('BOT_NAME');
     this.webAppName = this.configService.getOrThrow('WEB_APP_NAME');
@@ -59,6 +57,8 @@ export class MessageHandlerService {
       // This message sent when bot or some other chat member removed. As we registered to chat_member and my_chat_member it is now not needed
       this.logger.log('Recieved left_chat_participant message');
       return;
+    } else if (ctx.update.message.hasOwnProperty('new_chat_photo')) {
+      await this.updateCommunityChatPhoto(ctx);
     } else if (ctx.chat.type === 'private') {
       this.logger.log('Skipping processing because chat type is private');
       return;
@@ -84,8 +84,12 @@ export class MessageHandlerService {
       messageId: ctx.message.message_id,
       creatorUserId: ctx.message.from.id,
     });
-    this.communityService.increaseMessageCounter(forwardedFromChatId ?? ctx.message.chat.id);
-    this.createCommunityUserIfNotExist(ctx.message.from.id, forwardedFromChatId ?? ctx.message.chat.id, ctx.telegram);
+    await this.communityService.increaseMessageCounter(forwardedFromChatId ?? ctx.message.chat.id);
+    await this.createCommunityUserIfNotExist(
+      ctx.message.from.id,
+      forwardedFromChatId ?? ctx.message.chat.id,
+      ctx.telegram,
+    );
     this.logger.log('Message in DB:', JSON.stringify(message));
   }
 
@@ -127,6 +131,17 @@ export class MessageHandlerService {
           ],
         },
       });
+    }
+  }
+
+  private async updateCommunityChatPhoto(ctx: NarrowedContext<Context<Update>, Update.MessageUpdate>) {
+    const fileId = (ctx.update.message as any)?.new_chat_photo[0]?.file_id;
+    const chatId = ctx.update.message.chat.id;
+    if (fileId) {
+      const fileUrl = await ctx.telegram.getFileLink(fileId);
+      await this.communityService.updateCommunityAvatarByChatId(chatId, fileUrl);
+    } else {
+      this.logger.error(`Unable to get file id from new_chat_photo field for chat ${chatId}`);
     }
   }
 }

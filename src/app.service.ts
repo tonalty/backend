@@ -4,6 +4,7 @@ import { MessageHandlerService } from './telegram/messageHandler.service';
 import { ReactionHandlerService } from './telegram/reactionHandler.service';
 import { ChatMemberHandlerService } from './telegram/chatMemberHandler.service';
 import { MyChatMemberHandlerService } from './telegram/myChatMemberHandler.service';
+import { ChannelPostHandlerService } from './telegram/channelPostHandler.service';
 
 @Injectable()
 export class AppService implements OnModuleInit, OnModuleDestroy {
@@ -15,6 +16,7 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     private readonly reactionHandlerService: ReactionHandlerService,
     private readonly chatMemberHandlerService: ChatMemberHandlerService,
     private readonly myChatMemberHandlerService: MyChatMemberHandlerService,
+    private readonly channelPostHandlerService: ChannelPostHandlerService,
   ) {}
 
   onModuleInit() {
@@ -22,6 +24,7 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     this.telegramService.registerMessageHandler(this.messageHandlerService);
     this.telegramService.registerChatMemberHandler(this.chatMemberHandlerService);
     this.telegramService.registerMyChatMemberHandler(this.myChatMemberHandlerService);
+    this.telegramService.registerChannelPostHandler(this.channelPostHandlerService);
     this.telegramService.completeHandlerRegistration();
   }
 
