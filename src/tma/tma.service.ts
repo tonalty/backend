@@ -39,7 +39,7 @@ export class TmaService {
       throw new UnauthorizedException('webAppInitData auth_date param is in future');
     }
     if (auth_date + this.authDateTimeout < Date.now()) {
-      throw new UnauthorizedException('webAppInitData auth_date param is too old');
+      this.logger.warn(`webAppInitData auth_date param is too old ${auth_date}`);
     }
     urlSearchParams.delete('auth_date');
 
