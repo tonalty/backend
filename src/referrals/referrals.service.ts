@@ -21,7 +21,7 @@ export class ReferralsService {
   private readonly logger = new Logger(ReferralsService.name);
   private readonly botToken: string;
   private readonly botName;
-  private readonly webAppName;
+  private readonly joinAppName;
 
   constructor(
     private readonly configService: ConfigService,
@@ -35,13 +35,13 @@ export class ReferralsService {
   ) {
     this.botToken = this.configService.getOrThrow('BOT_TOKEN');
     this.botName = this.configService.getOrThrow('BOT_NAME');
-    this.webAppName = this.configService.getOrThrow('WEB_APP_NAME');
+    this.joinAppName = this.configService.getOrThrow('JOIN_APP_NAME');
   }
 
   async generateReferral(userId: number, chatId: number, title: string, name: string): Promise<string> {
     this.logger.log('this.botToken', this.botToken);
     this.logger.log('this.botName', this.botName);
-    this.logger.log('this.webAppName', this.webAppName);
+    this.logger.log('this.webAppName', this.joinAppName);
     const referral = await this.referralModel.findOne({
       chatId: chatId,
       ownerId: userId,
@@ -114,7 +114,7 @@ export class ReferralsService {
   createReferralLink(params: unknown) {
     const payload = Buffer.from(JSON.stringify(params)).toString('base64').replace(/=+$/, '');
 
-    return `https://t.me/${this.botName}/${this.webAppName}?startapp=${encodeURIComponent(payload)}`;
+    return `https://t.me/${this.botName}/${this.joinAppName}?startapp=${encodeURIComponent(payload)}`;
   }
 
   decodeStartParam(startParam: string) {
